@@ -3,7 +3,7 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { DailyContribution, Theme, TooltipPosition } from "@/lib/types";
 import { getGradeColor } from "@/lib/themes";
-import { groupByWeek, hexToNumber } from "@/lib/utils";
+import { groupByWeek, hexToNumber, formatCurrency, formatDate, formatTokenCount } from "@/lib/utils";
 import {
   CUBE_SIZE,
   MAX_CUBE_HEIGHT,
@@ -17,6 +17,13 @@ interface TokenGraph3DProps {
   theme: Theme;
   year: string;
   maxCost: number;
+  totalCost: number;
+  totalTokens: number;
+  activeDays: number;
+  bestDay: DailyContribution | null;
+  currentStreak: number;
+  longestStreak: number;
+  dateRange: { start: string; end: string };
   onDayHover: (day: DailyContribution | null, position: TooltipPosition | null) => void;
   onDayClick: (day: DailyContribution | null) => void;
 }
@@ -26,6 +33,13 @@ export function TokenGraph3D({
   theme,
   year,
   maxCost,
+  totalCost,
+  totalTokens,
+  activeDays,
+  bestDay,
+  currentStreak,
+  longestStreak,
+  dateRange,
   onDayHover,
   onDayClick,
 }: TokenGraph3DProps) {
@@ -189,7 +203,7 @@ export function TokenGraph3D({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="ic-contributions-wrapper relative overflow-x-auto">
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
@@ -197,9 +211,80 @@ export function TokenGraph3D({
         onClick={handleClick}
         className="cursor-pointer"
         style={{
+          width: "100%",
           minWidth: ISO_CANVAS_WIDTH,
         }}
       />
+      
+      {/* GitHub-style Stats Overlay - Top Right */}
+      <div className="absolute top-3 right-5">
+        <h5 className="mb-1 text-sm font-semibold" style={{ color: theme.text }}>
+          Token Usage
+        </h5>
+        <div 
+          className="flex justify-between rounded-md border px-1 md:px-2"
+          style={{ borderColor: theme.meta, backgroundColor: `${theme.background}ee` }}
+        >
+          <div className="p-2">
+            <span className="block text-2xl font-bold leading-tight" style={{ color: theme.grade4 }}>
+              {formatCurrency(totalCost)}
+            </span>
+            <span className="block text-xs font-bold" style={{ color: theme.text }}>Total</span>
+            <span className="hidden sm:block text-xs" style={{ color: theme.meta }}>
+              {dateRange.start} → {dateRange.end}
+            </span>
+          </div>
+          <div className="p-2 hidden xl:block">
+            <span className="block text-2xl font-bold leading-tight" style={{ color: theme.grade4 }}>
+              {formatTokenCount(totalTokens)}
+            </span>
+            <span className="block text-xs font-bold" style={{ color: theme.text }}>Tokens</span>
+            <span className="hidden sm:block text-xs" style={{ color: theme.meta }}>
+              {activeDays} active days
+            </span>
+          </div>
+          {bestDay && (
+            <div className="p-2">
+              <span className="block text-2xl font-bold leading-tight" style={{ color: theme.grade4 }}>
+                {formatCurrency(bestDay.totals.cost)}
+              </span>
+              <span className="block text-xs font-bold" style={{ color: theme.text }}>Best day</span>
+              <span className="hidden sm:block text-xs" style={{ color: theme.meta }}>
+                {formatDate(bestDay.date).split(',')[0]}
+              </span>
+            </div>
+          )}
+        </div>
+        <p className="mt-1 text-right text-xs" style={{ color: theme.meta }}>
+          Average: <span className="font-bold" style={{ color: theme.grade4 }}>
+            {formatCurrency(activeDays > 0 ? totalCost / activeDays : 0)}
+          </span> <span style={{ color: theme.meta }}>/ day</span>
+        </p>
+      </div>
+
+      {/* GitHub-style Streaks Overlay - Bottom Left */}
+      <div className="absolute bottom-6 left-5">
+        <h5 className="mb-1 text-sm font-semibold" style={{ color: theme.text }}>
+          Streaks
+        </h5>
+        <div 
+          className="flex justify-between rounded-md border px-1 md:px-2"
+          style={{ borderColor: theme.meta, backgroundColor: `${theme.background}ee` }}
+        >
+          <div className="p-2">
+            <span className="block text-2xl font-bold leading-tight" style={{ color: theme.grade4 }}>
+              {longestStreak} <span className="text-base">days</span>
+            </span>
+            <span className="block text-xs font-bold" style={{ color: theme.text }}>Longest</span>
+          </div>
+          <div className="p-2">
+            <span className="block text-2xl font-bold leading-tight" style={{ color: theme.grade4 }}>
+              {currentStreak} <span className="text-base">days</span>
+            </span>
+            <span className="block text-xs font-bold" style={{ color: theme.text }}>Current</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
