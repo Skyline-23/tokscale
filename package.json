@@ -1,17 +1,25 @@
 {
-  "name": "opencode-token-tracker",
+  "name": "token-tracker",
   "version": "1.0.0",
-  "description": "Calculate token prices from OpenCode sessions by model",
-  "main": "opencode-token-calc.ts",
-  "scripts": {
-    "start": "npx ts-node opencode-token-calc.ts",
-    "calc": "npx tsx opencode-token-calc.ts"
+  "description": "Calculate token prices from OpenCode and Claude Code sessions",
+  "type": "module",
+  "bin": {
+    "token-tracker": "./dist/cli.js"
   },
-  "dependencies": {},
+  "scripts": {
+    "build": "tsx src/cli.ts",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.2",
+    "picocolors": "^1.1.1",
+    "string-width": "^8.1.0"
+  },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0",
     "@types/node": "^20.0.0",
-    "tsx": "^4.0.0"
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }
