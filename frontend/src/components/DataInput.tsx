@@ -83,14 +83,14 @@ export function DataInput({ onDataLoaded }: DataInputProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">
           Load Token Usage Data
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-base text-gray-600 dark:text-gray-400">
           Paste JSON from{" "}
-          <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+          <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-mono">
             token-tracker graph
           </code>{" "}
           command, or load sample data.
@@ -98,46 +98,49 @@ export function DataInput({ onDataLoaded }: DataInputProps) {
       </div>
 
       {/* Textarea */}
-      <div className="mb-4">
+      <div className="mb-6">
         <textarea
           value={rawJson}
           onChange={handleTextareaChange}
           onKeyDown={handleKeyDown}
           placeholder='{"meta": {...}, "summary": {...}, "contributions": [...]}'
-          className={`w-full h-64 p-3 font-mono text-sm rounded-lg border resize-y
+          className={`w-full h-72 p-4 font-mono text-sm rounded-2xl border-2 resize-y
             bg-white dark:bg-gray-900
             text-gray-900 dark:text-gray-100
             placeholder-gray-400 dark:placeholder-gray-600
             ${
               error
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-500"
+                ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+                : "border-gray-200 dark:border-gray-700 focus:border-green-500 focus:ring-green-500/20"
             }
-            focus:outline-none focus:ring-2 focus:ring-opacity-50
-            transition-colors`}
+            focus:outline-none focus:ring-4
+            transition-all duration-200
+            shadow-sm`}
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
           Tip: Press Ctrl+Enter (Cmd+Enter on Mac) to parse
         </p>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
       {/* Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <button
           onClick={parseJson}
           disabled={isLoading || !rawJson.trim()}
-          className={`px-4 py-2 rounded-lg font-medium text-sm
-            bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+          className={`px-6 py-3 rounded-full font-semibold text-sm
+            bg-green-600 hover:bg-green-700 active:bg-green-800
             text-white
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors`}
+            transition-all duration-200
+            hover:shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5
+            active:translate-y-0`}
         >
           Parse JSON
         </button>
@@ -145,12 +148,14 @@ export function DataInput({ onDataLoaded }: DataInputProps) {
         <button
           onClick={loadSampleData}
           disabled={isLoading}
-          className={`px-4 py-2 rounded-lg font-medium text-sm
-            bg-gray-200 hover:bg-gray-300 active:bg-gray-400
-            dark:bg-gray-700 dark:hover:bg-gray-600 dark:active:bg-gray-500
+          className={`px-6 py-3 rounded-full font-semibold text-sm
+            bg-gray-100 hover:bg-gray-200 active:bg-gray-300
+            dark:bg-gray-800 dark:hover:bg-gray-700 dark:active:bg-gray-600
             text-gray-800 dark:text-gray-200
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors`}
+            transition-all duration-200
+            hover:shadow-md hover:-translate-y-0.5
+            active:translate-y-0`}
         >
           {isLoading ? (
             <span className="flex items-center gap-2">
@@ -183,24 +188,24 @@ export function DataInput({ onDataLoaded }: DataInputProps) {
       </div>
 
       {/* Instructions */}
-      <div className="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+      <div className="mt-10 p-6 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200/80 dark:border-gray-700/80">
+        <h3 className="text-base font-bold mb-4 text-gray-800 dark:text-gray-200">
           How to get your data
         </h3>
-        <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
-          <li>
+        <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-3 list-decimal list-inside">
+          <li className="leading-relaxed">
             Install token-tracker:{" "}
-            <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+            <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-mono">
               npx tsx src/cli.ts graph
             </code>
           </li>
-          <li>
+          <li className="leading-relaxed">
             Run the graph command:{" "}
-            <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+            <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-mono">
               token-tracker graph
             </code>
           </li>
-          <li>Copy the JSON output and paste it above</li>
+          <li className="leading-relaxed">Copy the JSON output and paste it above</li>
         </ol>
       </div>
     </div>

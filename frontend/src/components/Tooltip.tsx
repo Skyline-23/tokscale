@@ -61,7 +61,7 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
       }}
     >
       <div
-        className="rounded-lg shadow-lg border p-3 min-w-[200px]"
+        className="rounded-2xl shadow-xl border p-4 min-w-[220px] backdrop-blur-sm"
         style={{
           backgroundColor: "var(--color-card-bg)",
           borderColor: "var(--color-border-default)",
@@ -69,20 +69,20 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
         }}
       >
         {/* Date */}
-        <div className="font-semibold mb-2" style={{ color: "var(--color-fg-default)" }}>
+        <div className="font-bold text-base mb-3" style={{ color: "var(--color-fg-default)" }}>
           {formatDate(day.date)}
         </div>
 
         {/* Divider */}
-        <div className="border-t my-2" style={{ borderColor: "var(--color-border-muted)" }} />
+        <div className="border-t my-3" style={{ borderColor: "var(--color-border-muted)" }} />
 
         {/* Cost (highlighted) */}
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm" style={{ color: "var(--color-fg-muted)" }}>
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>
             Cost
           </span>
           <span
-            className="font-bold text-lg"
+            className="font-bold text-xl tracking-tight"
             style={{
               color:
                 day.intensity >= 3
@@ -97,10 +97,10 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
         </div>
 
         {/* Divider */}
-        <div className="border-t my-2" style={{ borderColor: "var(--color-border-muted)" }} />
+        <div className="border-t my-3" style={{ borderColor: "var(--color-border-muted)" }} />
 
         {/* Token breakdown */}
-        <div className="space-y-1 text-sm">
+        <div className="space-y-2 text-sm">
           <TokenRow label="Input" value={tokenBreakdown.input} />
           <TokenRow label="Output" value={tokenBreakdown.output} />
           <TokenRow label="Cache Read" value={tokenBreakdown.cacheRead} />
@@ -111,24 +111,24 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
         </div>
 
         {/* Divider */}
-        <div className="border-t my-2" style={{ borderColor: "var(--color-border-muted)" }} />
+        <div className="border-t my-3" style={{ borderColor: "var(--color-border-muted)" }} />
 
         {/* Total tokens */}
         <div className="flex justify-between items-center">
-          <span className="text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--color-fg-muted)" }}>
             Total
           </span>
-          <span className="font-semibold" style={{ color: "var(--color-fg-default)" }}>
+          <span className="font-bold" style={{ color: "var(--color-fg-default)" }}>
             {formatTokenCount(totals.tokens)} tokens
           </span>
         </div>
 
         {/* Messages count */}
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-sm" style={{ color: "var(--color-fg-muted)" }}>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>
             Messages
           </span>
-          <span className="text-sm" style={{ color: "var(--color-fg-default)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--color-fg-default)" }}>
             {totals.messages.toLocaleString()}
           </span>
         </div>
@@ -147,8 +147,8 @@ function TokenRow({ label, value }: TokenRowProps) {
 
   return (
     <div className="flex justify-between items-center">
-      <span style={{ color: "var(--color-fg-muted)" }}>{label}</span>
-      <span className="font-mono" style={{ color: "var(--color-fg-default)" }}>
+      <span className="font-medium" style={{ color: "var(--color-fg-muted)" }}>{label}</span>
+      <span className="font-mono font-semibold" style={{ color: "var(--color-fg-default)" }}>
         {formatTokenCount(value)}
       </span>
     </div>

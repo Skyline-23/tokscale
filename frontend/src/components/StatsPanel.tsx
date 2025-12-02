@@ -24,20 +24,20 @@ export function StatsPanel({ data, palette }: StatsPanelProps) {
 
   return (
     <div
-      className="rounded-lg border p-4"
+      className="rounded-2xl border p-6 shadow-sm transition-shadow hover:shadow-md"
       style={{
         backgroundColor: "var(--color-card-bg)",
         borderColor: "var(--color-border-default)",
       }}
     >
       <h3
-        className="text-sm font-semibold mb-3 uppercase tracking-wide"
+        className="text-sm font-bold mb-4 uppercase tracking-wider"
         style={{ color: "var(--color-fg-muted)" }}
       >
         Statistics
       </h3>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {/* Total Cost */}
         <StatItem
           label="Total Cost"
@@ -94,16 +94,16 @@ export function StatsPanel({ data, palette }: StatsPanelProps) {
 
       {/* Sources */}
       <div
-        className="mt-4 pt-4 border-t flex flex-wrap gap-2"
+        className="mt-6 pt-6 border-t flex flex-wrap gap-2 items-center"
         style={{ borderColor: "var(--color-border-default)" }}
       >
-        <span className="text-xs uppercase tracking-wide mr-2" style={{ color: "var(--color-fg-muted)" }}>
+        <span className="text-xs font-semibold uppercase tracking-wider mr-3" style={{ color: "var(--color-fg-muted)" }}>
           Sources:
         </span>
         {summary.sources.map((source) => (
           <span
             key={source}
-            className="text-xs px-2 py-0.5 rounded"
+            className="text-xs px-3 py-1.5 rounded-full font-medium transition-all duration-200 hover:scale-105"
             style={{
               backgroundColor: `${palette.grade3}20`,
               color: "var(--color-fg-default)",
@@ -127,18 +127,18 @@ interface StatItemProps {
 
 function StatItem({ label, value, subValue, highlightColor, highlight }: StatItemProps) {
   return (
-    <div>
-      <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--color-fg-muted)" }}>
+    <div className="space-y-1">
+      <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
         {label}
       </div>
       <div
-        className={`font-semibold ${highlight ? "text-lg" : "text-base"}`}
+        className={`font-bold tracking-tight ${highlight ? "text-xl" : "text-lg"}`}
         style={{ color: highlight && highlightColor ? highlightColor : "var(--color-fg-default)" }}
       >
         {value}
       </div>
       {subValue && (
-        <div className="text-xs" style={{ color: "var(--color-fg-muted)" }}>
+        <div className="text-xs font-medium" style={{ color: "var(--color-fg-muted)" }}>
           {subValue}
         </div>
       )}

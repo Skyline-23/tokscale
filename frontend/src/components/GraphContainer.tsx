@@ -125,17 +125,17 @@ export function GraphContainer({ data }: GraphContainerProps) {
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Graph with Controls */}
       <div
-        className="rounded-lg border py-2 overflow-hidden"
+        className="rounded-2xl border py-4 overflow-hidden shadow-sm transition-shadow hover:shadow-md"
         style={{
           backgroundColor: "var(--color-canvas-default)",
           borderColor: "var(--color-border-default)",
         }}
       >
         {/* Controls inside the graph container - GitHub style */}
-        <div className="px-4">
+        <div className="px-5">
           <GraphControls
             view={view}
             onViewChange={setView}
@@ -153,7 +153,7 @@ export function GraphContainer({ data }: GraphContainerProps) {
         </div>
 
         {/* Graph */}
-        <div className="px-4 pb-2">
+        <div className="px-5 pb-3">
           {view === "2d" ? (
             <TokenGraph2D
               contributions={yearContributions}

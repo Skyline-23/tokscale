@@ -24,7 +24,7 @@ export function BreakdownPanel({ day, onClose, palette }: BreakdownPanelProps) {
 
   return (
     <div
-      className="mt-6 rounded-lg border overflow-hidden"
+      className="mt-8 rounded-2xl border overflow-hidden shadow-sm transition-shadow hover:shadow-md"
       style={{
         backgroundColor: "var(--color-card-bg)",
         borderColor: "var(--color-border-default)",
@@ -32,15 +32,15 @@ export function BreakdownPanel({ day, onClose, palette }: BreakdownPanelProps) {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-b"
+        className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: "var(--color-border-default)" }}
       >
-        <h3 className="font-semibold" style={{ color: "var(--color-fg-default)" }}>
+        <h3 className="font-bold text-lg" style={{ color: "var(--color-fg-default)" }}>
           {formatDateFull(day.date)} - Detailed Breakdown
         </h3>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-200 hover:scale-110"
           style={{ color: "var(--color-fg-muted)" }}
         >
           <svg
@@ -50,7 +50,7 @@ export function BreakdownPanel({ day, onClose, palette }: BreakdownPanelProps) {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -61,13 +61,13 @@ export function BreakdownPanel({ day, onClose, palette }: BreakdownPanelProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-6">
         {day.sources.length === 0 ? (
-          <p className="text-center py-4" style={{ color: "var(--color-fg-muted)" }}>
+          <p className="text-center py-8 text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>
             No activity on this day
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {sortedSourceTypes.map((sourceType) => {
               const sources = sortSourcesByCost(groupedSources.get(sourceType) || []);
               const sourceTotalCost = sources.reduce((sum, s) => sum + s.cost, 0);
@@ -88,23 +88,23 @@ export function BreakdownPanel({ day, onClose, palette }: BreakdownPanelProps) {
         {/* Summary */}
         {day.sources.length > 0 && (
           <div
-            className="mt-4 pt-4 border-t flex flex-wrap gap-4 text-sm"
+            className="mt-6 pt-6 border-t flex flex-wrap gap-6 text-sm"
             style={{ borderColor: "var(--color-border-default)" }}
           >
-            <div style={{ color: "var(--color-fg-muted)" }}>
+            <div className="font-medium" style={{ color: "var(--color-fg-muted)" }}>
               Total:{" "}
-              <span className="font-bold" style={{ color: "var(--color-fg-default)" }}>
+              <span className="font-bold text-base" style={{ color: "var(--color-fg-default)" }}>
                 {formatCurrency(day.totals.cost)}
               </span>
             </div>
-            <div style={{ color: "var(--color-fg-muted)" }}>
+            <div className="font-medium" style={{ color: "var(--color-fg-muted)" }}>
               across{" "}
-              <span style={{ color: "var(--color-fg-default)" }}>
+              <span className="font-semibold" style={{ color: "var(--color-fg-default)" }}>
                 {sortedSourceTypes.length} source{sortedSourceTypes.length !== 1 ? "s" : ""}
               </span>
             </div>
-            <div style={{ color: "var(--color-fg-muted)" }}>
-              <span style={{ color: "var(--color-fg-default)" }}>
+            <div className="font-medium" style={{ color: "var(--color-fg-muted)" }}>
+              <span className="font-semibold" style={{ color: "var(--color-fg-default)" }}>
                 {new Set(day.sources.map((s) => s.modelId)).size} model
                 {new Set(day.sources.map((s) => s.modelId)).size !== 1 ? "s" : ""}
               </span>
@@ -129,9 +129,9 @@ function SourceSection({ sourceType, sources, totalCost, palette }: SourceSectio
   return (
     <div>
       {/* Source header */}
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-3 mb-3">
         <span
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-transform hover:scale-105"
           style={{
             backgroundColor: `${sourceColor}20`,
             color: sourceColor,
@@ -143,13 +143,13 @@ function SourceSection({ sourceType, sources, totalCost, palette }: SourceSectio
           />
           {SOURCE_DISPLAY_NAMES[sourceType] || sourceType}
         </span>
-        <span className="text-sm font-medium" style={{ color: "var(--color-fg-default)" }}>
+        <span className="text-sm font-bold" style={{ color: "var(--color-fg-default)" }}>
           {formatCurrency(totalCost)}
         </span>
       </div>
 
       {/* Models tree */}
-      <div className="ml-4 space-y-2">
+      <div className="ml-5 space-y-3">
         {sources.map((source, index) => (
           <ModelRow
             key={`${source.modelId}-${index}`}
@@ -179,7 +179,7 @@ function ModelRow({ source, isLast, palette }: ModelRowProps) {
         className="absolute left-0 top-0 w-4 h-full"
         style={{ color: "var(--color-fg-muted)" }}
       >
-        <span className="absolute left-0 top-2.5 w-3 border-t" style={{ borderColor: "var(--color-border-default)" }} />
+        <span className="absolute left-0 top-3 w-3 border-t" style={{ borderColor: "var(--color-border-default)" }} />
         {!isLast && (
           <span
             className="absolute left-0 top-0 h-full border-l"
@@ -188,15 +188,15 @@ function ModelRow({ source, isLast, palette }: ModelRowProps) {
         )}
       </div>
 
-      <div className="ml-5">
+      <div className="ml-6">
         {/* Model name and provider */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-sm" style={{ color: "var(--color-fg-default)" }}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="font-mono text-sm font-semibold" style={{ color: "var(--color-fg-default)" }}>
             {modelId}
           </span>
           {providerId && (
             <span
-              className="text-xs px-1.5 py-0.5 rounded"
+              className="text-xs px-2 py-1 rounded-md font-medium"
               style={{
                 backgroundColor: "var(--color-badge-bg)",
                 color: "var(--color-fg-muted)",
@@ -205,13 +205,13 @@ function ModelRow({ source, isLast, palette }: ModelRowProps) {
               {providerId}
             </span>
           )}
-          <span className="font-medium text-sm" style={{ color: palette.grade4 }}>
+          <span className="font-bold text-sm" style={{ color: palette.grade4 }}>
             {formatCurrency(cost)}
           </span>
         </div>
 
         {/* Token breakdown */}
-        <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 gap-y-1 text-xs">
+        <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-4 gap-y-2 text-xs">
           {tokens.input > 0 && (
             <TokenBadge label="Input" value={tokens.input} />
           )}
@@ -230,7 +230,7 @@ function ModelRow({ source, isLast, palette }: ModelRowProps) {
         </div>
 
         {/* Messages count */}
-        <div className="mt-1 text-xs" style={{ color: "var(--color-fg-muted)" }}>
+        <div className="mt-2 text-xs font-medium" style={{ color: "var(--color-fg-muted)" }}>
           {messages.toLocaleString()} message{messages !== 1 ? "s" : ""}
         </div>
       </div>
@@ -245,9 +245,9 @@ interface TokenBadgeProps {
 
 function TokenBadge({ label, value }: TokenBadgeProps) {
   return (
-    <div className="flex items-center gap-1">
-      <span style={{ color: "var(--color-fg-muted)" }}>{label}:</span>
-      <span className="font-mono" style={{ color: "var(--color-fg-default)" }}>
+    <div className="flex items-center gap-1.5">
+      <span className="font-medium" style={{ color: "var(--color-fg-muted)" }}>{label}:</span>
+      <span className="font-mono font-semibold" style={{ color: "var(--color-fg-default)" }}>
         {formatTokenCount(value)}
       </span>
     </div>
