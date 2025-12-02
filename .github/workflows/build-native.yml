@@ -32,10 +32,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: core/yarn.lock
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: core
 
       - name: Cargo fmt
         working-directory: core
@@ -77,39 +88,36 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-14
+          # macOS builds - cross-compile from macos-latest (ARM)
+          - host: macos-latest
             target: x86_64-apple-darwin
             build: |
               cd core
               yarn build --target x86_64-apple-darwin
               strip -x *.node
-          - host: macos-14
+          - host: macos-latest
             target: aarch64-apple-darwin
             build: |
               cd core
-              yarn build
+              yarn build --target aarch64-apple-darwin
               strip -x *.node
+          # Linux builds using napi-cross for glibc compatibility
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |
               cd core
-              yarn build --target x86_64-unknown-linux-gnu
-              strip *.node
+              yarn build --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |
               cd core
-              yarn build
-              strip *.node
+              yarn build --target x86_64-unknown-linux-musl -x
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |
               cd core
-              yarn build --target aarch64-unknown-linux-gnu
-              aarch64-unknown-linux-gnu-strip *.node
+              yarn build --target aarch64-unknown-linux-gnu --use-napi-cross
+          # Windows build
           - host: windows-latest
             target: x86_64-pc-windows-msvc
             build: |
@@ -123,10 +131,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: yarn
+          cache-dependency-path: core/yarn.lock
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        if: ${{ !matrix.settings.docker }}
         with:
           targets: ${{ matrix.settings.target }}
 
@@ -138,25 +147,30 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
+            ~/.napi-rs
+            .cargo-cache
             core/target/
-          key: ${{ matrix.settings.target }}-cargo-${{ hashFiles('core/Cargo.lock') }}
-          restore-keys: |
-            ${{ matrix.settings.target }}-cargo-
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}-${{ hashFiles('core/Cargo.lock') }}
+
+      # Install zig for musl builds
+      - uses: mlugg/setup-zig@v2
+        if: ${{ contains(matrix.settings.target, 'musl') }}
+        with:
+          version: 0.13.0
+
+      - name: Install cargo-zigbuild
+        uses: taiki-e/install-action@v2
+        if: ${{ contains(matrix.settings.target, 'musl') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tool: cargo-zigbuild
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         working-directory: core
 
-      - name: Build in Docker
-        uses: addnab/docker-run-action@v3
-        if: ${{ matrix.settings.docker }}
-        with:
-          image: ${{ matrix.settings.docker }}
-          options: "--user 0:0 -v ${{ github.workspace }}:/build -w /build"
-          run: ${{ matrix.settings.build }}
-
       - name: Build
-        if: ${{ !matrix.settings.docker }}
         run: ${{ matrix.settings.build }}
         shell: bash
 
@@ -167,26 +181,25 @@ jobs:
           path: core/*.node
           if-no-files-found: error
 
-  # Run JS integration tests on built artifacts
-  test-integration:
-    name: Integration Test - ${{ matrix.settings.target }} - Node ${{ matrix.node }}
+  # Test macOS and Windows bindings
+  test-macos-windows:
+    name: Test ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs: build
-    continue-on-error: true  # Don't fail the workflow on integration test failures
     strategy:
       fail-fast: false
       matrix:
         settings:
-          # Note: x86_64-apple-darwin skipped - no Intel macOS runner available
-          - host: macos-14
-            target: aarch64-apple-darwin
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
           - host: windows-latest
             target: x86_64-pc-windows-msvc
-        node: ["20"]  # Test only Node 20 for now (stable N-API)
-
+            architecture: x64
+          - host: macos-latest
+            target: aarch64-apple-darwin
+            architecture: arm64
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            architecture: x64
+        node: ["20", "22"]
     runs-on: ${{ matrix.settings.host }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -194,42 +207,92 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: core/yarn.lock
+          architecture: ${{ matrix.settings.architecture }}
 
-      - name: Install dependencies (root)
-        run: yarn install --frozen-lockfile
-
-      - name: Install dependencies (core)
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
         working-directory: core
 
-      - name: Download artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
           path: core/
 
-      - name: Test native module health
+      - name: List files
+        run: ls -la core/
+        shell: bash
+
+      - name: Test native module
         run: |
           node -e "const core = require('./index.js'); console.log('Version:', core.version()); console.log('Health:', core.healthCheck());"
         working-directory: core
 
-      - name: Run AVA integration tests
+      - name: Run integration tests
         run: yarn test
         working-directory: core
 
-      - name: Build TypeScript
-        run: yarn build
+  # Test Linux bindings in Docker containers
+  test-linux:
+    name: Test ${{ matrix.target }} - node@${{ matrix.node }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+        node: ["20", "22"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Run CLI with native module
-        run: yarn start --benchmark --year 2025 || true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: core/yarn.lock
+
+      - name: Determine Docker image
+        id: docker
+        run: |
+          if [[ "${{ matrix.target }}" == *"-musl" ]]; then
+            echo "IMAGE=node:${{ matrix.node }}-alpine" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE=node:${{ matrix.node }}-slim" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: core
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-${{ matrix.target }}
+          path: core/
+
+      - name: List files
+        run: ls -la core/
+        shell: bash
+
+      - name: Test bindings in Docker
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ steps.docker.outputs.IMAGE }}
+          options: -v ${{ github.workspace }}:/workspace -w /workspace/core
+          run: |
+            node -e "const core = require('./index.js'); console.log('Version:', core.version()); console.log('Health:', core.healthCheck());"
+            yarn test
 
   # Benchmark comparison
   benchmark:
     name: Benchmark
     needs: build
     runs-on: ubuntu-latest
-    continue-on-error: true  # Don't fail workflow on benchmark issues
-
     steps:
       - uses: actions/checkout@v4
 
@@ -237,6 +300,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies (root)
         run: yarn install --frozen-lockfile
@@ -251,8 +316,13 @@ jobs:
           name: bindings-x86_64-unknown-linux-gnu
           path: core/
 
-      - name: Build TypeScript
-        run: yarn build
+      - name: List files
+        run: ls -la core/
+
+      - name: Test native module loads
+        run: |
+          node -e "const core = require('./index.js'); console.log('Version:', core.version());"
+        working-directory: core
 
       - name: Generate synthetic data
         run: yarn bench:generate
@@ -260,14 +330,21 @@ jobs:
       - name: Run TypeScript benchmark
         run: yarn bench:ts:synthetic
 
-      - name: Run Rust benchmark
-        run: yarn bench:rust:synthetic
+      - name: Run Rust benchmark in Docker
+        uses: addnab/docker-run-action@v3
+        with:
+          image: node:20-slim
+          options: -v ${{ github.workspace }}:/workspace -w /workspace
+          run: |
+            yarn bench:rust:synthetic
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: benchmark-results
           path: benchmarks/results/*.json
+          if-no-files-found: ignore
 
   # Publish to npm (only on version tags)
   publish:
@@ -277,7 +354,9 @@ jobs:
     needs:
       - lint
       - test-rust
-      - build  # Only require builds to pass, not integration tests
+      - build
+      - test-macos-windows
+      - test-linux
     permissions:
       contents: write
       id-token: write
