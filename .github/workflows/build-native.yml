@@ -80,12 +80,14 @@ jobs:
           - host: macos-13
             target: x86_64-apple-darwin
             build: |
+              source $HOME/.cargo/env
               cd core
               yarn build
               strip -x *.node
           - host: macos-14
             target: aarch64-apple-darwin
             build: |
+              source $HOME/.cargo/env
               cd core
               yarn build
               strip -x *.node
