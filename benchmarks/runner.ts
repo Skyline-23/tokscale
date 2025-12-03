@@ -192,17 +192,26 @@ async function runGraphGenerationRust(syntheticPath?: string): Promise<{
   messages: number;
 }> {
   // Dynamic import native module
-  const { generateGraphNative, isNativeAvailable } = await import("../src/native.js");
+  const { 
+    parseLocalSourcesNative, 
+    finalizeGraphNative, 
+    isNativeAvailable 
+  } = await import("../src/native.js");
   
   if (!isNativeAvailable()) {
     throw new Error("Native Rust module not available. Run 'yarn build:core' first.");
   }
   
-  // For synthetic data, pass the path directly
-  const homeDir = syntheticPath ? path.resolve(syntheticPath) : undefined;
+  // Two-phase approach: parse local files, then finalize with empty pricing (no network)
+  // This benchmarks pure file parsing + aggregation performance without network latency
+  const localMessages = parseLocalSourcesNative({
+    sources: ['opencode', 'claude', 'codex', 'gemini'], // No cursor - it's network-synced
+  });
   
-  const data = generateGraphNative({
-    // Native module will use HOME env var if not specified
+  const data = finalizeGraphNative({
+    localMessages,
+    pricing: [], // Empty pricing for benchmark - no network fetch
+    includeCursor: false, // Skip cursor - no credentials in benchmark
   });
   
   // Count files and messages
