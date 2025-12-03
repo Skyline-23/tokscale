@@ -76,7 +76,8 @@ export function useSettings() {
   useEffect(() => {
     applyThemeToDocument(resolvedTheme);
     mountedRef.current = true;
-    setMounted(() => true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: track mount state for SSR hydration
+    setMounted(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export function useSettings() {
     if (!mountedRef.current) return;
 
     const resolved = settings.theme === "system" ? getSystemTheme() : settings.theme;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: sync resolved theme when settings change
     setResolvedTheme((prev) => {
       if (prev !== resolved) {
         applyThemeToDocument(resolved);
