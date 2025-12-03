@@ -28,6 +28,7 @@ import {
   type ModelReport,
   type MonthlyReport,
 } from "./native.js";
+import { createSpinner } from "./spinner.js";
 import * as fs from "node:fs";
 import { performance } from "node:perf_hooks";
 import type { SourceType } from "./graph-types.js";
@@ -174,9 +175,11 @@ async function ensureNativeModule(): Promise<void> {
   }
 }
 
-async function fetchPricingWithCache(): Promise<PricingFetcher> {
+async function fetchPricingWithCache(spinner?: ReturnType<typeof createSpinner>): Promise<PricingFetcher> {
   const fetcher = new PricingFetcher();
-  console.log(pc.gray("  Fetching pricing data..."));
+  if (spinner) {
+    spinner.update(pc.gray("Fetching pricing data..."));
+  }
   await fetcher.fetchPricing();
   return fetcher;
 }
@@ -190,9 +193,14 @@ async function showModelReport(options: FilterOptions & { benchmark?: boolean })
   }
   console.log();
 
-  const fetcher = await fetchPricingWithCache();
+  // Start spinner for loading phase
+  const spinner = createSpinner({ color: "cyan" });
+  spinner.start(pc.gray("Fetching pricing data..."));
+
+  const fetcher = await fetchPricingWithCache(spinner);
   const pricingEntries = fetcher.toPricingEntries();
 
+  spinner.update(pc.gray("Processing session data..."));
   const startTime = performance.now();
 
   let report: ModelReport;
@@ -202,11 +210,12 @@ async function showModelReport(options: FilterOptions & { benchmark?: boolean })
       pricing: pricingEntries,
     });
   } catch (e) {
-    console.error(pc.red(`Error: ${(e as Error).message}`));
+    spinner.error(`Error: ${(e as Error).message}`);
     process.exit(1);
   }
 
   const processingTime = performance.now() - startTime;
+  spinner.stop();
 
   if (report.entries.length === 0) {
     console.log(pc.yellow("  No usage data found.\n"));
@@ -270,9 +279,14 @@ async function showMonthlyReport(options: FilterOptions & { benchmark?: boolean 
   }
   console.log();
 
-  const fetcher = await fetchPricingWithCache();
+  // Start spinner for loading phase
+  const spinner = createSpinner({ color: "cyan" });
+  spinner.start(pc.gray("Fetching pricing data..."));
+
+  const fetcher = await fetchPricingWithCache(spinner);
   const pricingEntries = fetcher.toPricingEntries();
 
+  spinner.update(pc.gray("Processing session data..."));
   const startTime = performance.now();
 
   let report: MonthlyReport;
@@ -282,11 +296,12 @@ async function showMonthlyReport(options: FilterOptions & { benchmark?: boolean 
       pricing: pricingEntries,
     });
   } catch (e) {
-    console.error(pc.red(`Error: ${(e as Error).message}`));
+    spinner.error(`Error: ${(e as Error).message}`);
     process.exit(1);
   }
 
   const processingTime = performance.now() - startTime;
+  spinner.stop();
 
   if (report.entries.length === 0) {
     console.log(pc.yellow("  No usage data found.\n"));
@@ -345,9 +360,14 @@ interface GraphCommandOptions {
 async function handleGraphCommand(options: GraphCommandOptions) {
   await ensureNativeModule();
 
-  const fetcher = await fetchPricingWithCache();
+  // Start spinner for loading phase (only if outputting to file, not stdout)
+  const spinner = options.output ? createSpinner({ color: "cyan" }) : null;
+  spinner?.start(pc.gray("Fetching pricing data..."));
+
+  const fetcher = await fetchPricingWithCache(spinner ?? undefined);
   const pricingEntries = fetcher.toPricingEntries();
 
+  spinner?.update(pc.gray("Generating graph data..."));
   const startTime = performance.now();
 
   // Determine which sources to include
@@ -363,6 +383,7 @@ async function handleGraphCommand(options: GraphCommandOptions) {
   });
 
   const processingTime = performance.now() - startTime;
+  spinner?.stop();
 
   const jsonOutput = JSON.stringify(data, null, 2);
 
