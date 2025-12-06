@@ -7,7 +7,7 @@ interface SkeletonProps {
 export function Skeleton({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}
+      className={`animate-pulse bg-neutral-200 dark:bg-neutral-700 rounded ${className}`}
     />
   );
 }
@@ -20,7 +20,7 @@ export function LeaderboardSkeleton() {
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+            className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4"
           >
             <Skeleton className="h-4 w-20 mb-2" />
             <Skeleton className="h-8 w-24" />
@@ -29,9 +29,9 @@ export function LeaderboardSkeleton() {
       </div>
 
       {/* Table Skeleton */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
         {/* Header */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 px-6 py-3">
+        <div className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-800 px-6 py-3">
           <div className="flex gap-6">
             <Skeleton className="h-4 w-12" />
             <Skeleton className="h-4 w-24" />
@@ -43,7 +43,7 @@ export function LeaderboardSkeleton() {
         {[...Array(10)].map((_, i) => (
           <div
             key={i}
-            className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 last:border-0"
+            className="px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 last:border-0"
           >
             <div className="flex items-center gap-6">
               <Skeleton className="h-6 w-8" />
@@ -88,7 +88,7 @@ export function ProfileSkeleton() {
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+            className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4"
           >
             <Skeleton className="h-4 w-20 mb-2" />
             <Skeleton className="h-8 w-24" />
@@ -97,7 +97,7 @@ export function ProfileSkeleton() {
       </div>
 
       {/* Token Breakdown Skeleton */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6">
         <Skeleton className="h-6 w-36 mb-4" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -110,7 +110,7 @@ export function ProfileSkeleton() {
       </div>
 
       {/* Graph Skeleton */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6">
         <Skeleton className="h-6 w-24 mb-4" />
         <Skeleton className="h-40 w-full rounded-lg" />
       </div>
@@ -120,7 +120,7 @@ export function ProfileSkeleton() {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4">
       <Skeleton className="h-4 w-20 mb-2" />
       <Skeleton className="h-8 w-24" />
     </div>
@@ -129,7 +129,7 @@ export function StatCardSkeleton() {
 
 export function TableRowSkeleton() {
   return (
-    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+    <div className="px-6 py-4 border-b border-neutral-100 dark:border-neutral-800">
       <div className="flex items-center gap-6">
         <Skeleton className="h-6 w-8" />
         <div className="flex items-center gap-3">

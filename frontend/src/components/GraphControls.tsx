@@ -74,7 +74,7 @@ export function GraphControls({
         <select
           value={paletteName}
           onChange={(e) => onPaletteChange(e.target.value as ColorPaletteName)}
-          className="text-xs py-1.5 px-2 rounded-lg border cursor-pointer font-medium transition-all duration-200 hover:border-gray-400"
+          className="text-xs py-1.5 px-2 rounded-lg border cursor-pointer font-medium transition-all duration-200 hover:border-neutral-400"
           style={{
             borderColor: "var(--color-border-default)",
             color: "var(--color-fg-default)",
@@ -137,7 +137,7 @@ export function GraphControls({
             {sourceFilter.length > 0 && sourceFilter.length < availableSources.length && (
               <button
                 onClick={() => onSourceFilterChange([...availableSources])}
-                className="px-3 py-1 text-xs font-medium rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="px-3 py-1 text-xs font-medium rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 style={{ color: "var(--color-fg-muted)" }}
               >
                 Show all
@@ -146,7 +146,7 @@ export function GraphControls({
             {sourceFilter.length === availableSources.length && (
               <button
                 onClick={() => onSourceFilterChange([])}
-                className="px-3 py-1 text-xs font-medium rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="px-3 py-1 text-xs font-medium rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 style={{ color: "var(--color-fg-muted)" }}
               >
                 Clear

@@ -73,10 +73,10 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
         <Navigation />
         <main className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+          <div className="text-neutral-500 dark:text-neutral-400">Loading...</div>
         </main>
         <Footer />
       </div>
@@ -88,17 +88,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 transition-colors duration-300">
       <Navigation />
 
       <main className="flex-1 max-w-3xl mx-auto px-6 py-10 w-full">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8">
           Settings
         </h1>
 
         {/* Profile Section */}
-        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <section className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Profile
           </h2>
           <div className="flex items-center gap-4">
@@ -109,14 +109,14 @@ export default function SettingsPage() {
               square
             />
             <div>
-              <p className="font-medium text-gray-900 dark:text-white">
+              <p className="font-medium text-neutral-900 dark:text-white">
                 {user.displayName || user.username}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 @{user.username}
               </p>
               {user.email && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {user.email}
                 </p>
               )}
@@ -128,25 +128,25 @@ export default function SettingsPage() {
         </section>
 
         {/* API Tokens Section */}
-        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <section className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             API Tokens
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             Tokens are created when you run{" "}
-            <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+            <code className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs">
               token-tracker login
             </code>{" "}
             from the CLI.
           </p>
 
           {tokens.length === 0 ? (
-            <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+            <div className="py-8 text-center text-neutral-500 dark:text-neutral-400">
               <KeyIcon size={32} className="mx-auto mb-3 opacity-50" />
               <p>No API tokens yet.</p>
               <p className="text-sm mt-2">
                 Run{" "}
-                <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                <code className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs">
                   token-tracker login
                 </code>{" "}
                 to create one.
@@ -157,15 +157,15 @@ export default function SettingsPage() {
               {tokens.map((token) => (
                 <div
                   key={token.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl"
+                  className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl"
                 >
                   <div className="flex items-center gap-3">
-                    <KeyIcon size={20} className="text-gray-400" />
+                    <KeyIcon size={20} className="text-neutral-400" />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-neutral-900 dark:text-white">
                         {token.name}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         Created {new Date(token.createdAt).toLocaleDateString()}
                         {token.lastUsedAt && (
                           <> - Last used {new Date(token.lastUsedAt).toLocaleDateString()}</>
@@ -187,11 +187,11 @@ export default function SettingsPage() {
         </section>
 
         {/* Danger Zone */}
-        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
+        <section className="bg-white dark:bg-neutral-900 rounded-2xl border border-red-200 dark:border-red-900/50 p-6">
           <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
             Danger Zone
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             Deleting your account will remove all your submissions and cannot be undone.
           </p>
           <Button

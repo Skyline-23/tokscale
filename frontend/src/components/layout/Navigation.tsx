@@ -33,7 +33,7 @@ export function Navigation() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200/80 dark:border-gray-800/80 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-neutral-200/80 dark:border-neutral-800/80 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
@@ -53,7 +53,7 @@ export function Navigation() {
             </svg>
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+            <h1 className="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">
               Token Tracker
             </h1>
           </div>
@@ -65,8 +65,8 @@ export function Navigation() {
             href="/"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               isActive("/")
-                ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
             }`}
           >
             Leaderboard
@@ -75,8 +75,8 @@ export function Navigation() {
             href="/local"
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               isActive("/local")
-                ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
             }`}
           >
             Local Viewer
@@ -86,11 +86,11 @@ export function Navigation() {
         {/* User Menu */}
         <div className="flex items-center gap-3">
           {isLoading ? (
-            <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="w-9 h-9 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
           ) : user ? (
             <ActionMenu>
               <ActionMenu.Anchor>
-                <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <button className="flex items-center gap-2 p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                   <Avatar
                     src={user.avatarUrl || `https://github.com/${user.username}.png`}
                     alt={user.username}
@@ -101,11 +101,11 @@ export function Navigation() {
               <ActionMenu.Overlay width="medium">
                 <ActionList>
                   <ActionList.Group>
-                    <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
                       <p className="text-sm font-medium">
                         {user.displayName || user.username}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neutral-500">
                         @{user.username}
                       </p>
                     </div>

@@ -78,7 +78,7 @@ export default function JunhoyeoMockupPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
         <Navigation />
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
           <ProfileSkeleton />
@@ -90,14 +90,14 @@ export default function JunhoyeoMockupPage() {
 
   if (!data || !stats) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
         <Navigation />
         <main className="flex-1 max-w-7xl mx-auto px-6 py-10 w-full">
           <div className="text-center py-20">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
               Failed to load data
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-neutral-500 dark:text-neutral-400 mb-6">
               Make sure junhoyeo-data.json exists in the public folder.
             </p>
             <Link
@@ -114,7 +114,7 @@ export default function JunhoyeoMockupPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 transition-colors duration-300">
       <Navigation />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
@@ -138,11 +138,11 @@ export default function JunhoyeoMockupPage() {
               alt={MOCK_USER.username}
               size={96}
               square
-              className="ring-4 ring-gray-200 dark:ring-gray-700 shadow-xl"
+              className="ring-4 ring-neutral-200 dark:ring-neutral-700 shadow-xl"
             />
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
                   {MOCK_USER.displayName}
                 </h1>
                 <Label variant="attention" size="large">
@@ -150,7 +150,7 @@ export default function JunhoyeoMockupPage() {
                   <span className="ml-1">#1</span>
                 </Label>
               </div>
-              <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mb-3">
+              <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 mb-3">
                 @{MOCK_USER.username}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -173,44 +173,44 @@ export default function JunhoyeoMockupPage() {
               {data.meta.dateRange.start} - {data.meta.dateRange.end}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 shadow-sm">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total Tokens</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 shadow-sm">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">Total Tokens</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
               {formatNumber(stats.totalTokens)}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
               ~{(stats.totalTokens / 750).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} words
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 shadow-sm">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Active Days</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 shadow-sm">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">Active Days</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
               {stats.activeDays}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
               {(stats.totalCost / stats.activeDays).toFixed(2)}/day avg
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 shadow-sm">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Models Used</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 shadow-sm">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">Models Used</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white">
               {data.summary.models.length}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
               across {data.summary.sources.length} platforms
             </p>
           </div>
         </div>
 
         {/* Token Breakdown with Visual Bar */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-4">
             Token Breakdown
           </h2>
           
           {/* Visual breakdown bar */}
           <div className="mb-6">
-            <div className="h-2 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-800">
+            <div className="h-2 rounded-full overflow-hidden flex bg-neutral-100 dark:bg-neutral-800">
               <div 
                 style={{ 
                   width: `${(stats.inputTokens / stats.totalTokens) * 100}%`,
@@ -246,8 +246,8 @@ export default function JunhoyeoMockupPage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--data-blue-color-emphasis, #006edb)' }} />
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Input</p>
-                <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Input</p>
+                <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">
                   {formatNumber(stats.inputTokens)}
                 </p>
               </div>
@@ -255,8 +255,8 @@ export default function JunhoyeoMockupPage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--data-purple-color-emphasis, #894ceb)' }} />
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Output</p>
-                <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Output</p>
+                <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">
                   {formatNumber(stats.outputTokens)}
                 </p>
               </div>
@@ -264,8 +264,8 @@ export default function JunhoyeoMockupPage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--data-green-color-emphasis, #30a147)' }} />
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Cache Read</p>
-                <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Cache Read</p>
+                <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">
                   {formatNumber(stats.cacheReadTokens)}
                 </p>
               </div>
@@ -273,8 +273,8 @@ export default function JunhoyeoMockupPage() {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--data-orange-color-emphasis, #eb670f)' }} />
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Cache Write</p>
-                <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Cache Write</p>
+                <p className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">
                   {formatNumber(stats.cacheWriteTokens)}
                 </p>
               </div>
@@ -283,8 +283,8 @@ export default function JunhoyeoMockupPage() {
         </div>
 
         {/* Models Used */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-4">
             Models Used
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -298,7 +298,7 @@ export default function JunhoyeoMockupPage() {
 
         {/* Contribution Graph */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white mb-4">
             Activity
           </h2>
           <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
