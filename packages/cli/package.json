@@ -1,6 +1,6 @@
 {
   "name": "@0xinevitable/token-tracker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Calculate token prices from OpenCode, Claude Code, Codex, Gemini, and Cursor sessions",
   "license": "MIT",
   "type": "module",
