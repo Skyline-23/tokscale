@@ -99,6 +99,18 @@ export async function GET(_request: Request, { params }: RouteParams) {
       )
       .orderBy(dailyBreakdown.date);
 
+    // Source breakdown type
+    type SourceBreakdown = {
+      tokens: number;
+      cost: number;
+      modelId: string;
+      input: number;
+      output: number;
+      cacheRead: number;
+      cacheWrite: number;
+      messages: number;
+    };
+
     // Aggregate daily data (in case of overlapping submissions)
     const aggregatedDaily = new Map<
       string,
@@ -108,7 +120,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         cost: number;
         inputTokens: number;
         outputTokens: number;
-        sources: Record<string, number>;
+        sources: Record<string, SourceBreakdown>;
         models: Record<string, number>;
       }
     >();
@@ -120,10 +132,21 @@ export async function GET(_request: Request, { params }: RouteParams) {
         existing.cost += Number(day.cost);
         existing.inputTokens += Number(day.inputTokens);
         existing.outputTokens += Number(day.outputTokens);
-        // Merge breakdowns
+        // Merge source breakdowns
         if (day.sourceBreakdown) {
-          for (const [source, tokens] of Object.entries(day.sourceBreakdown)) {
-            existing.sources[source] = (existing.sources[source] || 0) + (tokens as number);
+          for (const [source, data] of Object.entries(day.sourceBreakdown)) {
+            const breakdown = data as SourceBreakdown;
+            if (existing.sources[source]) {
+              existing.sources[source].tokens += breakdown.tokens;
+              existing.sources[source].cost += breakdown.cost;
+              existing.sources[source].input += breakdown.input;
+              existing.sources[source].output += breakdown.output;
+              existing.sources[source].cacheRead += breakdown.cacheRead;
+              existing.sources[source].cacheWrite += breakdown.cacheWrite;
+              existing.sources[source].messages += breakdown.messages;
+            } else {
+              existing.sources[source] = { ...breakdown };
+            }
           }
         }
         if (day.modelBreakdown) {
@@ -138,7 +161,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
           cost: Number(day.cost),
           inputTokens: Number(day.inputTokens),
           outputTokens: Number(day.outputTokens),
-          sources: day.sourceBreakdown ? { ...(day.sourceBreakdown as Record<string, number>) } : {},
+          sources: day.sourceBreakdown ? { ...(day.sourceBreakdown as Record<string, SourceBreakdown>) } : {},
           models: day.modelBreakdown ? { ...(day.modelBreakdown as Record<string, number>) } : {},
         });
       }
@@ -178,48 +201,19 @@ export async function GET(_request: Request, { params }: RouteParams) {
           cacheWrite: 0,
           reasoning: 0,
         },
-        sources: Object.entries(day.sources).map(([source, data]) => {
-          // Handle both old format (number) and new format (object)
-          if (typeof data === "number") {
-            return {
-              source,
-              modelId: "",
-              tokens: {
-                input: Math.floor(data / 2),
-                output: Math.floor(data / 2),
-                cacheRead: 0,
-                cacheWrite: 0,
-                reasoning: 0,
-              },
-              cost: 0,
-              messages: 0,
-            };
-          }
-          // New format with full breakdown
-          const breakdown = data as {
-            tokens: number;
-            cost: number;
-            modelId: string;
-            input: number;
-            output: number;
-            cacheRead: number;
-            cacheWrite: number;
-            messages: number;
-          };
-          return {
-            source,
-            modelId: breakdown.modelId || "",
-            tokens: {
-              input: breakdown.input || 0,
-              output: breakdown.output || 0,
-              cacheRead: breakdown.cacheRead || 0,
-              cacheWrite: breakdown.cacheWrite || 0,
-              reasoning: 0,
-            },
-            cost: breakdown.cost || 0,
-            messages: breakdown.messages || 0,
-          };
-        }),
+        sources: Object.entries(day.sources).map(([source, breakdown]) => ({
+          source,
+          modelId: breakdown.modelId || "",
+          tokens: {
+            input: breakdown.input || 0,
+            output: breakdown.output || 0,
+            cacheRead: breakdown.cacheRead || 0,
+            cacheWrite: breakdown.cacheWrite || 0,
+            reasoning: 0,
+          },
+          cost: breakdown.cost || 0,
+          messages: breakdown.messages || 0,
+        })),
       };
     });
 
