@@ -178,19 +178,48 @@ export async function GET(_request: Request, { params }: RouteParams) {
           cacheWrite: 0,
           reasoning: 0,
         },
-        sources: Object.entries(day.sources).map(([source, tokens]) => ({
-          source,
-          modelId: "",
-          tokens: {
-            input: Math.floor((tokens as number) / 2),
-            output: Math.floor((tokens as number) / 2),
-            cacheRead: 0,
-            cacheWrite: 0,
-            reasoning: 0,
-          },
-          cost: 0,
-          messages: 0,
-        })),
+        sources: Object.entries(day.sources).map(([source, data]) => {
+          // Handle both old format (number) and new format (object)
+          if (typeof data === "number") {
+            return {
+              source,
+              modelId: "",
+              tokens: {
+                input: Math.floor(data / 2),
+                output: Math.floor(data / 2),
+                cacheRead: 0,
+                cacheWrite: 0,
+                reasoning: 0,
+              },
+              cost: 0,
+              messages: 0,
+            };
+          }
+          // New format with full breakdown
+          const breakdown = data as {
+            tokens: number;
+            cost: number;
+            modelId: string;
+            input: number;
+            output: number;
+            cacheRead: number;
+            cacheWrite: number;
+            messages: number;
+          };
+          return {
+            source,
+            modelId: breakdown.modelId || "",
+            tokens: {
+              input: breakdown.input || 0,
+              output: breakdown.output || 0,
+              cacheRead: breakdown.cacheRead || 0,
+              cacheWrite: breakdown.cacheWrite || 0,
+              reasoning: 0,
+            },
+            cost: breakdown.cost || 0,
+            messages: breakdown.messages || 0,
+          };
+        }),
       };
     });
 

@@ -211,7 +211,22 @@ export const dailyBreakdown = pgTable(
     providerBreakdown: jsonb("provider_breakdown").$type<
       Record<string, number>
     >(),
-    sourceBreakdown: jsonb("source_breakdown").$type<Record<string, number>>(),
+    sourceBreakdown: jsonb("source_breakdown").$type<
+      Record<
+        string,
+        | number
+        | {
+            tokens: number;
+            cost: number;
+            modelId: string;
+            input: number;
+            output: number;
+            cacheRead: number;
+            cacheWrite: number;
+            messages: number;
+          }
+      >
+    >(),
     modelBreakdown: jsonb("model_breakdown").$type<Record<string, number>>(),
   },
   (table) => [

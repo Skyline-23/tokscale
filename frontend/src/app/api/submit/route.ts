@@ -134,7 +134,19 @@ export async function POST(request: Request) {
         inputTokens: day.tokenBreakdown.input,
         outputTokens: day.tokenBreakdown.output,
         sourceBreakdown: Object.fromEntries(
-          day.sources.map((s) => [s.source, s.tokens.input + s.tokens.output])
+          day.sources.map((s) => [
+            s.source,
+            {
+              tokens: s.tokens.input + s.tokens.output,
+              cost: s.cost,
+              modelId: s.modelId,
+              input: s.tokens.input,
+              output: s.tokens.output,
+              cacheRead: s.tokens.cacheRead,
+              cacheWrite: s.tokens.cacheWrite,
+              messages: s.messages,
+            },
+          ])
         ),
         modelBreakdown: Object.fromEntries(
           day.sources.map((s) => [s.modelId, s.tokens.input + s.tokens.output])
