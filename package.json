@@ -11,6 +11,7 @@
     "benchmarks"
   ],
   "scripts": {
+    "postinstall": "yarn build:core",
     "build": "yarn build:core && yarn build:cli",
     "build:cli": "yarn workspace @0xinevitable/token-tracker build",
     "build:core": "yarn workspace @0xinevitable/token-tracker-core build",
