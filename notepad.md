@@ -425,3 +425,56 @@ CLI tool to track token usage across OpenCode, Claude Code, Codex, and Gemini se
 **Lint status:** ✅ Passing
 **CLI status:** ✅ Working
 
+---
+
+[2025-12-12 20:37] - TUI Redesign + Critical Bug Fixes + Performance Optimization
+
+### DISCOVERED ISSUES
+- lib.rs used "/" fallback when HOME not set - could scan entire filesystem
+- cursor.ts used Date.now() fallback for invalid timestamps - misleading data
+- pricing.rs used simple contains() for fuzzy matching - too permissive
+
+### IMPLEMENTATION DECISIONS
+- **TUI Redesign**: Added Overview tab with bar chart and model breakdown
+  - New components: BarChart, Legend, ModelListItem, OverviewView
+  - Provider color mapping (anthropic/openai/google/cursor)
+  - Fixed DST bug in streak calculation using Date.UTC()
+- **lib.rs**: Created `get_home_dir()` helper that returns `napi::Result<String>`
+  - Proper error propagation instead of silent fallback
+- **pricing.rs**: Added `is_word_boundary_match()` for stricter fuzzy matching
+  - Only matches at word boundaries (start of string, after hyphen/underscore)
+- **cursor.ts**: Changed timestamp fallback from `Date.now()` to `0` (epoch)
+  - Added length guard for `dateStr.slice(0, 10)`
+
+### PROBLEMS FOR NEXT TASKS
+- None - all critical bugs fixed
+
+### VERIFICATION RESULTS
+- Ran: `cargo test` - 44 tests passed
+- Ran: `yarn test` (core) - 11 tests passed  
+- Ran: `yarn cli models --benchmark` - CLI working, ~3.9s total
+
+### LEARNINGS
+- napi-rs `napi::Result<T>` in Rust becomes throwing function in JS
+- Word boundary matching: check if character before/after match is non-alphanumeric
+- Two-phase parallel processing already implemented (Cursor sync + pricing + local parsing)
+
+소요 시간: ~15 minutes
+
+---
+
+## SESSION SUMMARY (2025-12-12)
+
+| # | Task | Status | Commit |
+|---|------|--------|--------|
+| 1 | TUI Redesign (Overview tab) | ✅ | f52feea |
+| 2 | Pricing fetch timeout (15s) | ✅ | ad2266f |
+| 3 | lib.rs "/" fallback fix | ✅ | cd5a8a8 |
+| 4 | cursor.ts timestamp fallback | ✅ | cd5a8a8 |
+| 5 | pricing.rs fuzzy match fix | ✅ | cd5a8a8 |
+| 6 | Rust optimization Phase 1 | ✅ | (already done) |
+| 7 | Rust optimization Phase 2 | ✅ | (already done) |
+| 8 | Rust optimization Phase 3 | ✅ | verified |
+
+**All commits pushed to origin/main**
+
