@@ -155,7 +155,7 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
   const contributions: ContributionDay[] = dailyEntries.map(d => ({
     date: d.date,
     cost: d.cost,
-    level: Math.min(4, Math.floor((d.cost / maxCost) * 5)),
+    level: d.cost === 0 ? 0 : (Math.min(4, Math.ceil((d.cost / maxCost) * 4)) as 0 | 1 | 2 | 3 | 4),
   }));
 
   const contributionGrid = buildContributionGrid(contributions);
