@@ -35,6 +35,7 @@ export interface ParsedMessage {
   source: string
   modelId: string
   providerId: string
+  sessionId: string
   timestamp: number
   date: string
   input: number
