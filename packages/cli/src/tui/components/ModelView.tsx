@@ -95,7 +95,7 @@ export function ModelView(props: ModelViewProps) {
       <For each={formattedRows()}>
         {(row, i) => {
           const isActive = createMemo(() => i() === props.selectedIndex());
-          const rowBg = createMemo(() => isActive() ? "blue" : (i() % 2 === 0 ? "brightBlack" : undefined));
+          const rowBg = createMemo(() => isActive() ? "blue" : undefined);
           
           return (
             <box flexDirection="row">

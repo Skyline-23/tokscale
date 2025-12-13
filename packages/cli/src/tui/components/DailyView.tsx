@@ -48,7 +48,7 @@ export function DailyView(props: DailyViewProps) {
       <For each={visibleEntries()}>
         {(entry, i) => {
           const isActive = createMemo(() => i() === props.selectedIndex());
-          const rowBg = createMemo(() => isActive() ? "blue" : (i() % 2 === 0 ? "brightBlack" : undefined));
+          const rowBg = createMemo(() => isActive() ? "blue" : undefined);
           
           return (
             <box flexDirection="row">
