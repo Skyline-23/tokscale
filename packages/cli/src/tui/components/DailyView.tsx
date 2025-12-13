@@ -1,4 +1,4 @@
-import { Index, createMemo, type Accessor } from "solid-js";
+import { For, createMemo, type Accessor } from "solid-js";
 import type { TUIData, SortType } from "../hooks/useData.js";
 import { formatTokensCompact, formatCostFull } from "../utils/format.js";
 
@@ -45,28 +45,33 @@ export function DailyView(props: DailyViewProps) {
         </text>
       </box>
 
-      <Index each={visibleEntries()}>
-        {(entry, i) => (
-          <box flexDirection="row">
-            <text
-              backgroundColor={i === props.selectedIndex() ? "blue" : (i % 2 === 0 ? "brightBlack" : undefined)}
-              fg={i === props.selectedIndex() ? "white" : undefined}
-            >
-              {entry().date.padEnd(14)}
-              {formatTokensCompact(entry().input).padStart(14)}
-              {formatTokensCompact(entry().output).padStart(14)}
-              {formatTokensCompact(entry().cache).padStart(14)}
-              {formatTokensCompact(entry().total).padStart(16)}
-            </text>
-            <text
-              fg="green"
-              backgroundColor={i === props.selectedIndex() ? "blue" : (i % 2 === 0 ? "brightBlack" : undefined)}
-            >
-              {formatCostFull(entry().cost).padStart(12)}
-            </text>
-          </box>
-        )}
-      </Index>
+      <For each={visibleEntries()}>
+        {(entry, i) => {
+          const isActive = createMemo(() => i() === props.selectedIndex());
+          const rowBg = createMemo(() => isActive() ? "blue" : (i() % 2 === 0 ? "brightBlack" : undefined));
+          
+          return (
+            <box flexDirection="row">
+              <text
+                backgroundColor={rowBg()}
+                fg={isActive() ? "white" : undefined}
+              >
+                {entry.date.padEnd(14)}
+                {formatTokensCompact(entry.input).padStart(14)}
+                {formatTokensCompact(entry.output).padStart(14)}
+                {formatTokensCompact(entry.cache).padStart(14)}
+                {formatTokensCompact(entry.total).padStart(16)}
+              </text>
+              <text
+                fg="green"
+                backgroundColor={rowBg()}
+              >
+                {formatCostFull(entry.cost).padStart(12)}
+              </text>
+            </box>
+          );
+        }}
+      </For>
     </box>
   );
 }

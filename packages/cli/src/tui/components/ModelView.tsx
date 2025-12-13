@@ -1,4 +1,4 @@
-import { Index, createMemo, type Accessor } from "solid-js";
+import { For, createMemo, type Accessor } from "solid-js";
 import type { TUIData, SortType } from "../hooks/useData.js";
 import { getModelColor } from "../utils/colors.js";
 import { formatTokensCompact, formatCostFull } from "../utils/format.js";
@@ -92,32 +92,37 @@ export function ModelView(props: ModelViewProps) {
         </text>
       </box>
 
-      <Index each={formattedRows()}>
-        {(row, i) => (
-          <box flexDirection="row">
-            <text 
-              fg={getModelColor(row().entry.model)} 
-              backgroundColor={i === props.selectedIndex() ? "blue" : (i % 2 === 0 ? "brightBlack" : undefined)}
-            >●</text>
-            <text
-              backgroundColor={i === props.selectedIndex() ? "blue" : (i % 2 === 0 ? "brightBlack" : undefined)}
-              fg={i === props.selectedIndex() ? "white" : undefined}
-            >
-              {row().displayName.padEnd(row().nameWidth)}
-              {row().input.padStart(INPUT_COL_WIDTH)}
-              {row().output.padStart(OUTPUT_COL_WIDTH)}
-              {row().cache.padStart(CACHE_COL_WIDTH)}
-              {row().total.padStart(TOTAL_COL_WIDTH)}
-            </text>
-            <text
-              fg="green"
-              backgroundColor={i === props.selectedIndex() ? "blue" : (i % 2 === 0 ? "brightBlack" : undefined)}
-            >
-              {row().cost.padStart(COST_COL_WIDTH)}
-            </text>
-          </box>
-        )}
-      </Index>
+      <For each={formattedRows()}>
+        {(row, i) => {
+          const isActive = createMemo(() => i() === props.selectedIndex());
+          const rowBg = createMemo(() => isActive() ? "blue" : (i() % 2 === 0 ? "brightBlack" : undefined));
+          
+          return (
+            <box flexDirection="row">
+              <text 
+                fg={getModelColor(row.entry.model)} 
+                backgroundColor={rowBg()}
+              >●</text>
+              <text
+                backgroundColor={rowBg()}
+                fg={isActive() ? "white" : undefined}
+              >
+                {row.displayName.padEnd(row.nameWidth)}
+                {row.input.padStart(INPUT_COL_WIDTH)}
+                {row.output.padStart(OUTPUT_COL_WIDTH)}
+                {row.cache.padStart(CACHE_COL_WIDTH)}
+                {row.total.padStart(TOTAL_COL_WIDTH)}
+              </text>
+              <text
+                fg="green"
+                backgroundColor={rowBg()}
+              >
+                {row.cost.padStart(COST_COL_WIDTH)}
+              </text>
+            </box>
+          );
+        }}
+      </For>
     </box>
   );
 }
