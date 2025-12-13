@@ -14,9 +14,9 @@ import type {
 } from "../types/index.js";
 import {
   isNativeAvailable,
-  parseLocalSourcesNative,
-  finalizeReportNative,
-  finalizeGraphNative,
+  parseLocalSourcesAsync,
+  finalizeReportAsync,
+  finalizeGraphAsync,
   type ParsedMessages,
 } from "../../native.js";
 import { PricingFetcher } from "../../pricing.js";
@@ -143,13 +143,20 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
 
   const pricingFetcher = new PricingFetcher();
   
-  const [, cursorSync, localMessages] = await Promise.all([
+  const phase1Results = await Promise.allSettled([
     pricingFetcher.fetchPricing(),
     includeCursor && loadCursorCredentials() ? syncCursorCache() : Promise.resolve({ synced: false, rows: 0 }),
     localSources.length > 0
-      ? parseLocalSourcesNative({ sources: localSources as ("opencode" | "claude" | "codex" | "gemini")[], since, until, year })
+      ? parseLocalSourcesAsync({ sources: localSources as ("opencode" | "claude" | "codex" | "gemini")[], since, until, year })
       : Promise.resolve({ messages: [], opencodeCount: 0, claudeCount: 0, codexCount: 0, geminiCount: 0, processingTimeMs: 0 } as ParsedMessages),
   ]);
+
+  const cursorSync = phase1Results[1].status === "fulfilled" 
+    ? phase1Results[1].value 
+    : { synced: false, rows: 0 };
+  const localMessages = phase1Results[2].status === "fulfilled" 
+    ? phase1Results[2].value 
+    : null;
 
   const emptyMessages: ParsedMessages = {
     messages: [],
@@ -160,23 +167,34 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     processingTimeMs: 0,
   };
 
-  const report = finalizeReportNative({
-    localMessages: localMessages || emptyMessages,
-    pricing: pricingFetcher.toPricingEntries(),
-    includeCursor: includeCursor && cursorSync.synced,
-    since,
-    until,
-    year,
-  });
+  const phase2Results = await Promise.allSettled([
+    finalizeReportAsync({
+      localMessages: localMessages || emptyMessages,
+      pricing: pricingFetcher.toPricingEntries(),
+      includeCursor: includeCursor && cursorSync.synced,
+      since,
+      until,
+      year,
+    }),
+    finalizeGraphAsync({
+      localMessages: localMessages || emptyMessages,
+      pricing: pricingFetcher.toPricingEntries(),
+      includeCursor: includeCursor && cursorSync.synced,
+      since,
+      until,
+      year,
+    }),
+  ]);
 
-  const graph = finalizeGraphNative({
-    localMessages: localMessages || emptyMessages,
-    pricing: pricingFetcher.toPricingEntries(),
-    includeCursor: includeCursor && cursorSync.synced,
-    since,
-    until,
-    year,
-  });
+  if (phase2Results[0].status === "rejected") {
+    throw new Error(`Failed to finalize report: ${phase2Results[0].reason}`);
+  }
+  if (phase2Results[1].status === "rejected") {
+    throw new Error(`Failed to finalize graph: ${phase2Results[1].reason}`);
+  }
+
+  const report = phase2Results[0].value;
+  const graph = phase2Results[1].value;
 
   const modelEntries: ModelEntry[] = report.entries.map(e => ({
     source: e.source,

@@ -8,7 +8,7 @@ import { loadCredentials, getApiBaseUrl } from "./credentials.js";
 import { PricingFetcher } from "./pricing.js";
 import {
   isNativeAvailable,
-  generateGraphWithPricing,
+  generateGraphWithPricingAsync,
 } from "./native.js";
 import type { TokenContributionData } from "./graph-types.js";
 import { formatCurrency } from "./table.js";
@@ -88,7 +88,7 @@ export async function submit(options: SubmitOptions = {}): Promise<void> {
 
   let data: TokenContributionData;
   try {
-    data = generateGraphWithPricing({
+    data = await generateGraphWithPricingAsync({
       sources,
       pricing: pricingEntries,
       since: options.since,

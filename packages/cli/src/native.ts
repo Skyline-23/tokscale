@@ -359,28 +359,7 @@ export function generateGraphNative(options: TSGraphOptions = {}): TokenContribu
   return fromNativeResult(result);
 }
 
-/**
- * Generate graph data with pricing calculation
- */
-export function generateGraphWithPricing(
-  options: TSGraphOptions & { pricing: PricingEntry[] }
-): TokenContributionData {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
 
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  const result = nativeCore.generateGraphWithPricing(nativeOptions);
-  return fromNativeResult(result);
-}
 
 // =============================================================================
 // Reports
@@ -427,54 +406,6 @@ export interface MonthlyReport {
   processingTimeMs: number;
 }
 
-export interface ReportOptions {
-  sources?: SourceType[];
-  pricing: PricingEntry[];
-  since?: string;
-  until?: string;
-  year?: string;
-}
-
-/**
- * Get model usage report using native module
- */
-export function getModelReportNative(options: ReportOptions): ModelReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.getModelReport(nativeOptions);
-}
-
-/**
- * Get monthly usage report using native module
- */
-export function getMonthlyReportNative(options: ReportOptions): MonthlyReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.getMonthlyReport(nativeOptions);
-}
-
 // =============================================================================
 // Two-Phase Processing (Parallel Optimization)
 // =============================================================================
@@ -516,12 +447,97 @@ export interface FinalizeOptions {
   year?: string;
 }
 
-/**
- * Parse local sources only (OpenCode, Claude, Codex, Gemini - NO Cursor)
- * This can run in parallel with network operations (Cursor sync, pricing fetch)
- */
-export function parseLocalSourcesNative(options: LocalParseOptions): ParsedMessages {
-  if (!nativeCore) {
+
+
+// =============================================================================
+// Async Subprocess Wrappers (Non-blocking for UI)
+// =============================================================================
+
+import { spawn } from "bun";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const DEFAULT_TIMEOUT_MS = 120_000; // 2 minutes default
+const NATIVE_TIMEOUT_MS = parseInt(
+  process.env.TOKEN_TRACKER_NATIVE_TIMEOUT_MS || String(DEFAULT_TIMEOUT_MS),
+  10
+);
+
+// Timeout-related exit codes
+const TIMEOUT_EXIT_CODES = new Set([
+  124,  // GNU timeout default
+  143,  // 128 + 15 (SIGTERM)
+  137,  // 128 + 9 (SIGKILL - when SIGTERM fails)
+]);
+
+async function runInSubprocess<T>(method: string, args: unknown[]): Promise<T> {
+  const runnerPath = join(__dirname, "native-runner.ts");
+  const input = JSON.stringify({ method, args });
+
+  const proc = spawn({
+    cmd: ["bun", "run", runnerPath],
+    stdin: "pipe",
+    stdout: "pipe",
+    stderr: "pipe",
+    timeout: NATIVE_TIMEOUT_MS,
+    killSignal: "SIGTERM",
+  });
+
+  // Helper to consume streams (prevents resource leaks)
+  const consumeStreams = async (): Promise<{ stdout: string; stderr: string }> => {
+    const [stdout, stderr] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+    ]);
+    return { stdout, stderr };
+  };
+
+  try {
+    proc.stdin.write(input);
+    proc.stdin.end();
+  } catch (e) {
+    proc.kill("SIGTERM");
+    // Must consume streams even after kill to prevent resource leaks
+    await consumeStreams().catch(() => {}); // Ignore stream errors after kill
+    await proc.exited.catch(() => {}); // Wait for process to exit
+    throw new Error(`Failed to write to subprocess stdin: ${(e as Error).message}`);
+  }
+
+  const [{ stdout, stderr }, exitCode] = await Promise.all([
+    consumeStreams(),
+    proc.exited,
+  ]);
+
+  // Check for timeout exit codes
+  if (TIMEOUT_EXIT_CODES.has(exitCode)) {
+    throw new Error(
+      `Subprocess '${method}' timed out after ${NATIVE_TIMEOUT_MS}ms (exit code ${exitCode})`
+    );
+  }
+
+  if (exitCode !== 0) {
+    let errorMsg = stderr || `Process exited with code ${exitCode}`;
+    try {
+      const parsed = JSON.parse(stderr);
+      if (parsed.error) errorMsg = parsed.error;
+    } catch {}
+    throw new Error(`Subprocess '${method}' failed: ${errorMsg}`);
+  }
+
+  try {
+    return JSON.parse(stdout) as T;
+  } catch (e) {
+    throw new Error(
+      `Failed to parse subprocess output: ${(e as Error).message}\nstdout: ${stdout.slice(0, 500)}`
+    );
+  }
+}
+
+export async function parseLocalSourcesAsync(options: LocalParseOptions): Promise<ParsedMessages> {
+  if (!isNativeAvailable()) {
     throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
   }
 
@@ -533,14 +549,11 @@ export function parseLocalSourcesNative(options: LocalParseOptions): ParsedMessa
     year: options.year,
   };
 
-  return nativeCore.parseLocalSources(nativeOptions);
+  return runInSubprocess<ParsedMessages>("parseLocalSources", [nativeOptions]);
 }
 
-/**
- * Finalize model report: apply pricing to local messages, add Cursor, aggregate
- */
-export function finalizeReportNative(options: FinalizeOptions): ModelReport {
-  if (!nativeCore) {
+export async function finalizeReportAsync(options: FinalizeOptions): Promise<ModelReport> {
+  if (!isNativeAvailable()) {
     throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
   }
 
@@ -554,14 +567,11 @@ export function finalizeReportNative(options: FinalizeOptions): ModelReport {
     year: options.year,
   };
 
-  return nativeCore.finalizeReport(nativeOptions);
+  return runInSubprocess<ModelReport>("finalizeReport", [nativeOptions]);
 }
 
-/**
- * Finalize monthly report: apply pricing to local messages, add Cursor, aggregate
- */
-export function finalizeMonthlyReportNative(options: FinalizeOptions): MonthlyReport {
-  if (!nativeCore) {
+export async function finalizeMonthlyReportAsync(options: FinalizeOptions): Promise<MonthlyReport> {
+  if (!isNativeAvailable()) {
     throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
   }
 
@@ -575,14 +585,11 @@ export function finalizeMonthlyReportNative(options: FinalizeOptions): MonthlyRe
     year: options.year,
   };
 
-  return nativeCore.finalizeMonthlyReport(nativeOptions);
+  return runInSubprocess<MonthlyReport>("finalizeMonthlyReport", [nativeOptions]);
 }
 
-/**
- * Finalize graph: apply pricing to local messages, add Cursor, aggregate
- */
-export function finalizeGraphNative(options: FinalizeOptions): TokenContributionData {
-  if (!nativeCore) {
+export async function finalizeGraphAsync(options: FinalizeOptions): Promise<TokenContributionData> {
+  if (!isNativeAvailable()) {
     throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
   }
 
@@ -596,6 +603,26 @@ export function finalizeGraphNative(options: FinalizeOptions): TokenContribution
     year: options.year,
   };
 
-  const result = nativeCore.finalizeGraph(nativeOptions);
+  const result = await runInSubprocess<NativeGraphResult>("finalizeGraph", [nativeOptions]);
+  return fromNativeResult(result);
+}
+
+export async function generateGraphWithPricingAsync(
+  options: TSGraphOptions & { pricing: PricingEntry[] }
+): Promise<TokenContributionData> {
+  if (!isNativeAvailable()) {
+    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
+  }
+
+  const nativeOptions: NativeReportOptions = {
+    homeDir: undefined,
+    sources: options.sources,
+    pricing: options.pricing,
+    since: options.since,
+    until: options.until,
+    year: options.year,
+  };
+
+  const result = await runInSubprocess<NativeGraphResult>("generateGraphWithPricing", [nativeOptions]);
   return fromNativeResult(result);
 }
