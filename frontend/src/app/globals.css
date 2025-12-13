@@ -70,6 +70,10 @@ code, pre, .font-mono {
     Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+button {
+  cursor: pointer;
+}
+
 .bg-canvas { background-color: #141415; }
 .bg-canvas-subtle { background-color: #1F1F20; }
 .bg-card { background-color: #1F1F20; }
