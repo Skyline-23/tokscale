@@ -627,8 +627,13 @@ async function runInSubprocess<T>(method: string, args: unknown[]): Promise<T> {
     killSignal: "SIGTERM",
   });
 
-  proc.stdin.write(input);
-  proc.stdin.end();
+  try {
+    proc.stdin.write(input);
+    proc.stdin.end();
+  } catch (e) {
+    proc.kill("SIGTERM");
+    throw new Error(`Failed to write to subprocess stdin: ${(e as Error).message}`);
+  }
 
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(proc.stdout).text(),
@@ -722,5 +727,25 @@ export async function finalizeGraphAsync(options: FinalizeOptions): Promise<Toke
   };
 
   const result = await runInSubprocess<NativeGraphResult>("finalizeGraph", [nativeOptions]);
+  return fromNativeResult(result);
+}
+
+export async function generateGraphWithPricingAsync(
+  options: TSGraphOptions & { pricing: PricingEntry[] }
+): Promise<TokenContributionData> {
+  if (!isNativeAvailable()) {
+    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
+  }
+
+  const nativeOptions: NativeReportOptions = {
+    homeDir: undefined,
+    sources: options.sources,
+    pricing: options.pricing,
+    since: options.since,
+    until: options.until,
+    year: options.year,
+  };
+
+  const result = await runInSubprocess<NativeGraphResult>("generateGraphWithPricing", [nativeOptions]);
   return fromNativeResult(result);
 }

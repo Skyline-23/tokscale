@@ -30,7 +30,18 @@ async function main() {
     process.exit(1);
   }
   
-  const { method, args } = JSON.parse(input) as NativeRunnerRequest;
+  let request: NativeRunnerRequest;
+  try {
+    request = JSON.parse(input) as NativeRunnerRequest;
+  } catch (e) {
+    throw new Error(`Malformed JSON input: ${(e as Error).message}`);
+  }
+  
+  const { method, args } = request;
+  
+  if (!Array.isArray(args) || args.length === 0) {
+    throw new Error(`Invalid args for method '${method}': expected at least 1 argument`);
+  }
   
   let result: unknown;
   
@@ -46,6 +57,9 @@ async function main() {
       break;
     case "finalizeGraph":
       result = nativeCore.finalizeGraph(args[0] as Parameters<typeof nativeCore.finalizeGraph>[0]);
+      break;
+    case "generateGraphWithPricing":
+      result = nativeCore.generateGraphWithPricing(args[0] as Parameters<typeof nativeCore.generateGraphWithPricing>[0]);
       break;
     default:
       throw new Error(`Unknown method: ${method}`);
