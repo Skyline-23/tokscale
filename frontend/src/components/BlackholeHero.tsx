@@ -5,7 +5,18 @@ import { useEffect, useState } from "react";
 
 const BlackholeBackground = dynamic(
   () => import("@junhoyeo/blackhole").then((mod) => mod.BlackholeBackground),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#000",
+        }}
+      />
+    ),
+  }
 );
 
 export function BlackholeHero() {
