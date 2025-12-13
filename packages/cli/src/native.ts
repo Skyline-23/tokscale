@@ -359,28 +359,7 @@ export function generateGraphNative(options: TSGraphOptions = {}): TokenContribu
   return fromNativeResult(result);
 }
 
-/**
- * Generate graph data with pricing calculation
- */
-export function generateGraphWithPricing(
-  options: TSGraphOptions & { pricing: PricingEntry[] }
-): TokenContributionData {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
 
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  const result = nativeCore.generateGraphWithPricing(nativeOptions);
-  return fromNativeResult(result);
-}
 
 // =============================================================================
 // Reports
@@ -427,54 +406,6 @@ export interface MonthlyReport {
   processingTimeMs: number;
 }
 
-export interface ReportOptions {
-  sources?: SourceType[];
-  pricing: PricingEntry[];
-  since?: string;
-  until?: string;
-  year?: string;
-}
-
-/**
- * Get model usage report using native module
- */
-export function getModelReportNative(options: ReportOptions): ModelReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.getModelReport(nativeOptions);
-}
-
-/**
- * Get monthly usage report using native module
- */
-export function getMonthlyReportNative(options: ReportOptions): MonthlyReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeReportOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    pricing: options.pricing,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.getMonthlyReport(nativeOptions);
-}
-
 // =============================================================================
 // Two-Phase Processing (Parallel Optimization)
 // =============================================================================
@@ -516,86 +447,7 @@ export interface FinalizeOptions {
   year?: string;
 }
 
-/**
- * Parse local sources only (OpenCode, Claude, Codex, Gemini - NO Cursor)
- * This can run in parallel with network operations (Cursor sync, pricing fetch)
- */
-export function parseLocalSourcesNative(options: LocalParseOptions): ParsedMessages {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
 
-  const nativeOptions: NativeLocalParseOptions = {
-    homeDir: undefined,
-    sources: options.sources,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.parseLocalSources(nativeOptions);
-}
-
-/**
- * Finalize model report: apply pricing to local messages, add Cursor, aggregate
- */
-export function finalizeReportNative(options: FinalizeOptions): ModelReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeFinalizeReportOptions = {
-    homeDir: undefined,
-    localMessages: options.localMessages,
-    pricing: options.pricing,
-    includeCursor: options.includeCursor,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.finalizeReport(nativeOptions);
-}
-
-/**
- * Finalize monthly report: apply pricing to local messages, add Cursor, aggregate
- */
-export function finalizeMonthlyReportNative(options: FinalizeOptions): MonthlyReport {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeFinalizeReportOptions = {
-    homeDir: undefined,
-    localMessages: options.localMessages,
-    pricing: options.pricing,
-    includeCursor: options.includeCursor,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  return nativeCore.finalizeMonthlyReport(nativeOptions);
-}
-
-export function finalizeGraphNative(options: FinalizeOptions): TokenContributionData {
-  if (!nativeCore) {
-    throw new Error("Native module not available: " + (loadError?.message || "unknown error"));
-  }
-
-  const nativeOptions: NativeFinalizeReportOptions = {
-    homeDir: undefined,
-    localMessages: options.localMessages,
-    pricing: options.pricing,
-    includeCursor: options.includeCursor,
-    since: options.since,
-    until: options.until,
-    year: options.year,
-  };
-
-  const result = nativeCore.finalizeGraph(nativeOptions);
-  return fromNativeResult(result);
-}
 
 // =============================================================================
 // Async Subprocess Wrappers (Non-blocking for UI)
