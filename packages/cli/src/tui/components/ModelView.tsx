@@ -47,13 +47,18 @@ export function ModelView(props: ModelViewProps) {
     };
   });
 
-  const visibleEntries = createMemo(() => sortedEntries().slice(0, props.height - 3));
+  const visibleEntries = createMemo(() => {
+    const maxRows = Math.max(props.height - 3, 0);
+    return sortedEntries().slice(0, maxRows);
+  });
+
+  const widths = () => nameColumnWidths();
 
   return (
     <box flexDirection="column">
       <box flexDirection="row">
         <text fg="cyan" bold>
-          {" Source/Model".padEnd(nameColumnWidths().column)}
+          {" Source/Model".padEnd(widths().column)}
           {"Input".padStart(INPUT_COL_WIDTH)}
           {"Output".padStart(OUTPUT_COL_WIDTH)}
           {"Cache".padStart(CACHE_COL_WIDTH)}
@@ -61,15 +66,16 @@ export function ModelView(props: ModelViewProps) {
           {"Cost".padStart(COST_COL_WIDTH)}
         </text>
       </box>
-      <box borderStyle="single" borderTop={false} borderLeft={false} borderRight={false} borderBottom borderColor="gray" />
+      <box borderStyle="single" borderTop={false} borderLeft={false} borderRight={false} borderBottom borderColor="brightBlack" />
 
       <For each={visibleEntries()}>
         {(entry, i) => {
           const isSelected = () => i() === props.selectedIndex;
+          const stripe = () => (i() % 2 === 0 ? "brightBlack" : undefined);
+          const rowBg = () => (isSelected() ? "blue" : stripe());
           const sourceLabel = entry.source.charAt(0).toUpperCase() + entry.source.slice(1);
           const fullName = `${sourceLabel} ${entry.model}`;
-          const widths = nameColumnWidths();
-          const nameWidth = widths.text;
+          const nameWidth = widths().text;
           let displayName = fullName;
 
           if (fullName.length > nameWidth) {
@@ -78,9 +84,9 @@ export function ModelView(props: ModelViewProps) {
 
           return (
             <box flexDirection="row">
-              <text fg={getModelColor(entry.model)} backgroundColor={isSelected() ? "blue" : undefined}>●</text>
+              <text fg={getModelColor(entry.model)} backgroundColor={rowBg()}>●</text>
               <text
-                backgroundColor={isSelected() ? "blue" : undefined}
+                backgroundColor={rowBg()}
                 fg={isSelected() ? "white" : undefined}
               >
                 {displayName.padEnd(nameWidth)}
@@ -91,7 +97,7 @@ export function ModelView(props: ModelViewProps) {
               </text>
               <text
                 fg="green"
-                backgroundColor={isSelected() ? "blue" : undefined}
+                backgroundColor={rowBg()}
               >
                 {formatCostFull(entry.cost).padStart(COST_COL_WIDTH)}
               </text>
