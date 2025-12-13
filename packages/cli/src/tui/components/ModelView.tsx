@@ -12,7 +12,6 @@ const METRIC_COLUMNS_WIDTH = INPUT_COL_WIDTH + OUTPUT_COL_WIDTH + CACHE_COL_WIDT
 const SIDE_PADDING = 2;
 const MIN_NAME_COLUMN = 24;
 
-
 interface ModelViewProps {
   data: TUIData;
   sortBy: SortType;
@@ -52,10 +51,8 @@ export function ModelView(props: ModelViewProps) {
     return sortedEntries().slice(0, maxRows);
   });
 
-  const widths = () => nameColumnWidths();
-
   const formattedRows = createMemo(() => {
-    const nameWidth = widths().text;
+    const nameWidth = nameColumnWidths().text;
     return visibleEntries().map((entry) => {
       const sourceLabel = entry.source.charAt(0).toUpperCase() + entry.source.slice(1);
       const fullName = `${sourceLabel} ${entry.model}`;
@@ -79,20 +76,17 @@ export function ModelView(props: ModelViewProps) {
 
   const sortArrow = () => (props.sortDesc ? "▼" : "▲");
   const nameHeader = () => ` Source/Model${props.sortBy === "name" ? " " + sortArrow() : ""}`;
-  const inputHeader = () => (props.sortBy === "tokens" ? "Input" : "Input");
-  const outputHeader = () => (props.sortBy === "tokens" ? "Output" : "Output");
-  const cacheHeader = () => (props.sortBy === "tokens" ? "Cache" : "Cache");
-  const totalHeader = () => `${props.sortBy === "tokens" ? sortArrow() + " Total" : "Total"}`;
-  const costHeader = () => `${props.sortBy === "cost" ? sortArrow() + " Cost" : "Cost"}`;
+  const totalHeader = () => (props.sortBy === "tokens" ? `${sortArrow()} Total` : "Total");
+  const costHeader = () => (props.sortBy === "cost" ? `${sortArrow()} Cost` : "Cost");
 
   return (
     <box flexDirection="column">
       <box flexDirection="row">
         <text fg="cyan" bold>
-          {nameHeader().padEnd(widths().column)}
-          {inputHeader().padStart(INPUT_COL_WIDTH)}
-          {outputHeader().padStart(OUTPUT_COL_WIDTH)}
-          {cacheHeader().padStart(CACHE_COL_WIDTH)}
+          {nameHeader().padEnd(nameColumnWidths().column)}
+          {"Input".padStart(INPUT_COL_WIDTH)}
+          {"Output".padStart(OUTPUT_COL_WIDTH)}
+          {"Cache".padStart(CACHE_COL_WIDTH)}
           {totalHeader().padStart(TOTAL_COL_WIDTH)}
           {costHeader().padStart(COST_COL_WIDTH)}
         </text>

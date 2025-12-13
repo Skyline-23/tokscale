@@ -33,7 +33,6 @@ function getRepeatedString(char: string, count: number): string {
   return cached;
 }
 
-
 export function BarChart(props: BarChartProps) {
   const data = () => props.data;
   const width = () => props.width;
@@ -55,6 +54,17 @@ export function BarChart(props: BarChartProps) {
   const barWidth = () => Math.max(1, Math.floor(chartWidth() / Math.min(data().length, 52)));
   const visibleBars = () => Math.min(data().length, Math.floor(chartWidth() / barWidth()));
   const visibleData = createMemo(() => data().slice(-visibleBars()));
+
+  const sortedModelsMap = createMemo(() => {
+    const vd = visibleData();
+    const map = new Map<string, { modelId: string; tokens: number; color: string }[]>();
+    for (const point of vd) {
+      const models = point.models ?? [];
+      const sorted = [...models].sort((a, b) => a.modelId.localeCompare(b.modelId));
+      map.set(point.date, sorted);
+    }
+    return map;
+  });
 
   const rowIndices = createMemo(() => {
     const sh = safeHeight();
@@ -104,11 +114,14 @@ export function BarChart(props: BarChartProps) {
       return { char: getRepeatedString(" ", bw), color: "dim" };
     }
 
-    const sortedModels = [...point.models].sort((a, b) => a.modelId.localeCompare(b.modelId));
-    
+    const sortedModels = sortedModelsMap().get(point.date) ?? [];
+    if (sortedModels.length === 0) {
+      return { char: getRepeatedString(" ", bw), color: "dim" };
+    }
+
     let currentHeight = 0;
     let maxOverlap = 0;
-    let color = sortedModels[0]?.color || "white";
+    let color = sortedModels[0].color;
 
     const rowStart = prevThreshold;
     const rowEnd = rowThreshold;
@@ -135,7 +148,6 @@ export function BarChart(props: BarChartProps) {
     const ratio = thresholdDiff > 0 ? (point.total - prevThreshold) / thresholdDiff : 1;
     const blockIndex = Math.min(8, Math.max(1, Math.floor(ratio * 8)));
     return { char: getRepeatedString(BLOCKS[blockIndex], bw), color };
-
   };
 
   return (
