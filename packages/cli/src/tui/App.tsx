@@ -265,6 +265,8 @@ export function App(props: AppProps) {
               <Match when={activeTab() === "overview"}>
                 <OverviewView
                   data={data()!}
+                  sortBy={sortBy()}
+                  sortDesc={sortDesc()}
                   selectedIndex={selectedIndex}
                   scrollOffset={scrollOffset}
                   height={contentHeight()}
