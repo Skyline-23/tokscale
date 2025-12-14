@@ -3,18 +3,7 @@
 import Image from "next/image";
 import { GraphContainer } from "@/components/GraphContainer";
 import type { TokenContributionData } from "@/lib/types";
-
-export function formatNumber(num: number): string {
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}B`;
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
-  return num.toLocaleString();
-}
-
-export function formatCurrency(amount: number): string {
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(2)}K`;
-  return `$${amount.toFixed(2)}`;
-}
+import { formatNumber, formatCurrency } from "@/lib/utils";
 
 export interface ProfileUser {
   username: string;
