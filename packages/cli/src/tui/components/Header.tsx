@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 import type { TabType } from "../types/index.js";
 
 const NARROW_TERMINAL_WIDTH = 80;
-const VERY_NARROW_TERMINAL_WIDTH = 50;
+const VERY_NARROW_TERMINAL_WIDTH = 60;
 
 interface HeaderProps {
   activeTab: TabType;
