@@ -39,7 +39,7 @@ export async function login(): Promise<void> {
   const credentials = loadCredentials();
   if (credentials) {
     console.log(pc.yellow(`\n  Already logged in as ${pc.bold(credentials.username)}`));
-    console.log(pc.gray("  Run 'token-tracker logout' to sign out first.\n"));
+    console.log(pc.gray("  Run 'tokscale logout' to sign out first.\n"));
     return;
   }
 
@@ -108,7 +108,7 @@ export async function login(): Promise<void> {
         });
 
         console.log(pc.green(`\n  Success! Logged in as ${pc.bold(data.user.username)}`));
-        console.log(pc.gray("  You can now use 'token-tracker submit' to share your usage.\n"));
+        console.log(pc.gray("  You can now use 'tokscale submit' to share your usage.\n"));
         return;
       }
 
@@ -159,7 +159,7 @@ export async function whoami(): Promise<void> {
 
   if (!credentials) {
     console.log(pc.yellow("\n  Not logged in."));
-    console.log(pc.gray("  Run 'token-tracker login' to authenticate.\n"));
+    console.log(pc.gray("  Run 'tokscale login' to authenticate.\n"));
     return;
   }
 

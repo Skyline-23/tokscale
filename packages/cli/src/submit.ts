@@ -54,7 +54,7 @@ export async function submit(options: SubmitOptions = {}): Promise<void> {
   const credentials = loadCredentials();
   if (!credentials) {
     console.log(pc.yellow("\n  Not logged in."));
-    console.log(pc.gray("  Run 'token-tracker login' first.\n"));
+    console.log(pc.gray("  Run 'tokscale login' first.\n"));
     process.exit(1);
   }
 
