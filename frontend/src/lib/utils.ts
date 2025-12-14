@@ -206,7 +206,10 @@ export function formatTokenCount(count: number): string {
   return count.toLocaleString();
 }
 
+export const formatNumber = formatTokenCount;
+
 export function formatCurrency(amount: number): string {
+  if (amount >= 1000) return `$${(amount / 1000).toFixed(2)}K`;
   return `$${amount.toFixed(2)}`;
 }
 

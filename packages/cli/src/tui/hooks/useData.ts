@@ -203,7 +203,8 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     output: e.output,
     cacheWrite: e.cacheWrite,
     cacheRead: e.cacheRead,
-    total: e.input + e.output + e.cacheWrite + e.cacheRead,
+    reasoning: e.reasoning,
+    total: e.input + e.output + e.cacheWrite + e.cacheRead + e.reasoning,
     cost: e.cost,
   }));
 
@@ -356,13 +357,13 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     });
   }
 
-  const totalTokensSum = stats.totalTokens || 1;
+  const totalCostSum = report.totalCost || 1;
   const topModels: ModelWithPercentage[] = Array.from(modelTokensMap.entries())
     .map(([modelId, data]) => {
       const totalTokens = data.input + data.output;
       return {
         modelId,
-        percentage: (totalTokens / totalTokensSum) * 100,
+        percentage: (data.cost / totalCostSum) * 100,
         inputTokens: data.input,
         outputTokens: data.output,
         totalTokens,
@@ -371,12 +372,14 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     })
     .sort((a, b) => b.cost - a.cost);
 
+  const totalReasoning = modelEntries.reduce((sum, e) => sum + e.reasoning, 0);
   const totals: TotalBreakdown = {
     input: report.totalInput,
     output: report.totalOutput,
     cacheWrite: report.totalCacheWrite,
     cacheRead: report.totalCacheRead,
-    total: report.totalInput + report.totalOutput + report.totalCacheWrite + report.totalCacheRead,
+    reasoning: totalReasoning,
+    total: report.totalInput + report.totalOutput + report.totalCacheWrite + report.totalCacheRead + totalReasoning,
     cost: report.totalCost,
   };
 

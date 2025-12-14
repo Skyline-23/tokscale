@@ -8,6 +8,7 @@ import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { LeaderboardSkeleton } from "@/components/Skeleton";
 import { BlackholeHero } from "@/components/BlackholeHero";
+import { formatNumber, formatCurrency } from "@/lib/utils";
 
 type Period = "all" | "month" | "week";
 
@@ -40,17 +41,6 @@ interface LeaderboardData {
     uniqueUsers: number;
   };
   period: Period;
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
-  return num.toLocaleString();
-}
-
-function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
 }
 
 export default function LeaderboardPage() {
