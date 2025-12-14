@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Token Tracker CLI
+ * Tokscale CLI
  * Display OpenCode, Claude Code, Codex, Gemini, and Cursor usage with dynamic width tables
  * 
  * All heavy computation is done in the native Rust module.
@@ -234,14 +234,14 @@ async function main() {
 
   program
     .command("login")
-    .description("Login to Token Tracker (opens browser for GitHub auth)")
+    .description("Login to Tokscale (opens browser for GitHub auth)")
     .action(async () => {
       await login();
     });
 
   program
     .command("logout")
-    .description("Logout from Token Tracker")
+    .description("Logout from Tokscale")
     .action(async () => {
       await logout();
     });
@@ -259,7 +259,7 @@ async function main() {
 
   program
     .command("submit")
-    .description("Submit your usage data to Token Tracker")
+    .description("Submit your usage data to Tokscale")
     .option("--opencode", "Include only OpenCode data")
     .option("--claude", "Include only Claude Code data")
     .option("--codex", "Include only Codex CLI data")

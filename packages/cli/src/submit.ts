@@ -1,5 +1,5 @@
 /**
- * Token Tracker CLI Submit Command
+ * Tokscale CLI Submit Command
  * Submits local token usage data to the social platform
  */
 
@@ -65,7 +65,7 @@ export async function submit(options: SubmitOptions = {}): Promise<void> {
     process.exit(1);
   }
 
-  console.log(pc.cyan("\n  Token Tracker - Submit Usage Data\n"));
+  console.log(pc.cyan("\n  Tokscale - Submit Usage Data\n"));
 
   // Step 3: Generate graph data
   console.log(pc.gray("  Scanning local session data..."));

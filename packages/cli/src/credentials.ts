@@ -1,5 +1,5 @@
 /**
- * Token Tracker CLI Credentials Manager
+ * Tokscale CLI Credentials Manager
  * Stores and retrieves API tokens for authenticated CLI operations
  */
 

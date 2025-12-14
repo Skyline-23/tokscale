@@ -1,5 +1,5 @@
 /**
- * Token Tracker CLI Authentication Commands
+ * Tokscale CLI Authentication Commands
  * Handles login, logout, and whoami commands
  */
 
@@ -45,7 +45,7 @@ export async function login(): Promise<void> {
 
   const baseUrl = getApiBaseUrl();
 
-  console.log(pc.cyan("\n  Token Tracker - Login\n"));
+  console.log(pc.cyan("\n  Tokscale - Login\n"));
 
   // Step 1: Request device code
   console.log(pc.gray("  Requesting authorization code..."));
@@ -163,7 +163,7 @@ export async function whoami(): Promise<void> {
     return;
   }
 
-  console.log(pc.cyan("\n  Token Tracker - Account Info\n"));
+  console.log(pc.cyan("\n  Tokscale - Account Info\n"));
   console.log(pc.white(`  Username:  ${pc.bold(credentials.username)}`));
   console.log(pc.gray(`  Logged in: ${new Date(credentials.createdAt).toLocaleDateString()}`));
   console.log();
