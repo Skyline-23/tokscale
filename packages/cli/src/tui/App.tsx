@@ -253,7 +253,7 @@ export function App(props: AppProps) {
 
   return (
     <box flexDirection="column" width={columns()} height={rows()}>
-      <Header activeTab={activeTab()} onTabClick={handleTabClick} />
+      <Header activeTab={activeTab()} onTabClick={handleTabClick} width={columns()} />
 
       <box flexDirection="column" flexGrow={1} paddingX={1}>
         <Switch>
@@ -293,6 +293,7 @@ export function App(props: AppProps) {
                   sortDesc={sortDesc()}
                   selectedIndex={selectedIndex}
                   height={contentHeight()}
+                  width={columns()}
                 />
               </Match>
               <Match when={activeTab() === "stats"}>
@@ -318,6 +319,7 @@ export function App(props: AppProps) {
         totalItems={data()?.topModels.length}
         colorPalette={colorPalette()}
         statusMessage={statusMessage()}
+        width={columns()}
         onSourceToggle={handleSourceToggle}
         onSortChange={handleSortChange}
         onPaletteChange={handlePaletteChange}

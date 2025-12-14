@@ -1,21 +1,33 @@
 import { Show } from "solid-js";
 import type { TabType } from "../types/index.js";
 
+const NARROW_TERMINAL_WIDTH = 80;
+const VERY_NARROW_TERMINAL_WIDTH = 50;
+
 interface HeaderProps {
   activeTab: TabType;
   onTabClick?: (tab: TabType) => void;
+  width?: number;
 }
 
 export function Header(props: HeaderProps) {
+  const isNarrowTerminal = () => (props.width ?? 100) < NARROW_TERMINAL_WIDTH;
+  const isVeryNarrowTerminal = () => (props.width ?? 100) < VERY_NARROW_TERMINAL_WIDTH;
+
+  const getTabName = (fullName: string, shortName: string) => 
+    isVeryNarrowTerminal() ? shortName : fullName;
+
   return (
     <box flexDirection="row" paddingX={1} paddingY={0} justifyContent="space-between">
-      <box flexDirection="row" gap={2}>
-        <Tab name="Overview" tabId="overview" active={props.activeTab === "overview"} onClick={props.onTabClick} />
-        <Tab name="Models" tabId="model" active={props.activeTab === "model"} onClick={props.onTabClick} />
-        <Tab name="Daily" tabId="daily" active={props.activeTab === "daily"} onClick={props.onTabClick} />
-        <Tab name="Stats" tabId="stats" active={props.activeTab === "stats"} onClick={props.onTabClick} />
+      <box flexDirection="row" gap={isVeryNarrowTerminal() ? 1 : 2}>
+        <Tab name={getTabName("Overview", "Ovw")} tabId="overview" active={props.activeTab === "overview"} onClick={props.onTabClick} />
+        <Tab name={getTabName("Models", "Mod")} tabId="model" active={props.activeTab === "model"} onClick={props.onTabClick} />
+        <Tab name={getTabName("Daily", "Day")} tabId="daily" active={props.activeTab === "daily"} onClick={props.onTabClick} />
+        <Tab name={getTabName("Stats", "Sta")} tabId="stats" active={props.activeTab === "stats"} onClick={props.onTabClick} />
       </box>
-      <text fg="cyan" bold>Token Usage Tracker</text>
+      <Show when={!isNarrowTerminal()}>
+        <text fg="cyan" bold>Token Usage Tracker</text>
+      </Show>
     </box>
   );
 }
