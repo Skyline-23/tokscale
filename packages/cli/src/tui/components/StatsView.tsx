@@ -45,6 +45,7 @@ export function StatsView(props: StatsViewProps) {
   
   const selectedBreakdown = createMemo(() => {
     if (!props.selectedDate) return null;
+    if (!props.data.dailyBreakdowns || !(props.data.dailyBreakdowns instanceof Map)) return null;
     return props.data.dailyBreakdowns.get(props.selectedDate) || null;
   });
   

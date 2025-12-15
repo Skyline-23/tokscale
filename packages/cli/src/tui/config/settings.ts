@@ -71,6 +71,10 @@ export function loadCachedData(enabledSources: Set<string>): TUIData | null {
       return null;
     }
     
+    if (!cached.data.dailyBreakdowns || !Array.isArray(cached.data.dailyBreakdowns)) {
+      return null;
+    }
+    
     return {
       ...cached.data,
       dailyBreakdowns: new Map(cached.data.dailyBreakdowns),

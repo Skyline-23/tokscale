@@ -439,12 +439,17 @@ export function useData(enabledSources: Accessor<Set<SourceType>>, dateFilters?:
   );
   const [isRefreshing, setIsRefreshing] = createSignal(initialCachedData ? initialCacheIsStale : false);
 
+  const [forceRefresh, setForceRefresh] = createSignal(false);
+
   const refresh = () => {
+    setForceRefresh(true);
     setRefreshTrigger(prev => prev + 1);
   };
 
   const doLoad = (sources: Set<SourceType>, skipCacheCheck = false) => {
-    if (!skipCacheCheck) {
+    const shouldSkipCache = skipCacheCheck || forceRefresh();
+    
+    if (!shouldSkipCache) {
       const cachedData = loadCachedData(sources);
       const cacheIsStale = isCacheStale(sources);
       
@@ -465,6 +470,10 @@ export function useData(enabledSources: Accessor<Set<SourceType>>, dateFilters?:
         setLoading(true);
         setLoadingPhase("loading-pricing");
       }
+    } else {
+      setIsRefreshing(true);
+      setLoadingPhase("loading-pricing");
+      setForceRefresh(false);
     }
     
     setError(null);
