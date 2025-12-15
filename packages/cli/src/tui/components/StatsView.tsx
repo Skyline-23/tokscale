@@ -1,9 +1,10 @@
-import { For, Show } from "solid-js";
+import { For, Show, createMemo, createSignal, type Setter } from "solid-js";
 import type { TUIData } from "../hooks/useData.js";
 import type { ColorPaletteName } from "../config/themes.js";
+import type { DailyModelBreakdown } from "../types/index.js";
 import { getPalette, getGradeColor } from "../config/themes.js";
 import { getModelColor } from "../utils/colors.js";
-import { formatTokens } from "../utils/format.js";
+import { formatTokens, formatCost } from "../utils/format.js";
 import { isNarrow } from "../utils/responsive.js";
 
 interface StatsViewProps {
@@ -11,44 +12,164 @@ interface StatsViewProps {
   height: number;
   colorPalette: ColorPaletteName;
   width?: number;
+  selectedDate?: string | null;
+  onDateSelect?: Setter<string | null>;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTHS_SHORT = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
+const SOURCE_COLORS: Record<string, string> = {
+  opencode: "#22c55e",
+  claude: "#f97316",
+  codex: "#3b82f6",
+  cursor: "#a855f7",
+  gemini: "#06b6d4",
+};
+
+interface MonthLabel {
+  month: string;
+  weekIndex: number;
+}
+
+function formatDateDisplay(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
 
 export function StatsView(props: StatsViewProps) {
   const palette = () => getPalette(props.colorPalette);
   const isNarrowTerminal = () => isNarrow(props.width);
-
   const grid = () => props.data.contributionGrid;
-  const monthLabels = () => isNarrowTerminal() ? MONTHS_SHORT : MONTHS;
+  const cellWidth = 2;
+  
+  const [clickedCell, setClickedCell] = createSignal<string | null>(null);
+  // DEBUG: keep this for debugging mouse click coordinate mapping
+  const [debugInfo, setDebugInfo] = createSignal<string>("No click yet");
+  
+  const selectedBreakdown = createMemo(() => {
+    const date = clickedCell();
+    if (!date) return null;
+    if (!props.data.dailyBreakdowns) return null;
+    if (!(props.data.dailyBreakdowns instanceof Map)) return null;
+    return props.data.dailyBreakdowns.get(date) || null;
+  });
+  
+  const monthPositions = createMemo(() => {
+    const sundayRow = grid()[0] || [];
+    if (sundayRow.length === 0) return [];
+    
+    const positions: MonthLabel[] = [];
+    let lastMonth = -1;
+    const monthNames = isNarrowTerminal() ? MONTHS_SHORT : MONTHS;
+    
+    for (let weekIdx = 0; weekIdx < sundayRow.length; weekIdx++) {
+      const cell = sundayRow[weekIdx];
+      if (!cell.date) continue;
+      const month = new Date(cell.date).getMonth();
+      if (month !== lastMonth) {
+        positions.push({ month: monthNames[month], weekIndex: weekIdx });
+        lastMonth = month;
+      }
+    }
+    return positions;
+  });
+
+  const totalWeeks = createMemo(() => (grid()[0] || []).length);
+
+  const monthLabelRow = createMemo(() => {
+    const weeks = totalWeeks();
+    const positions = monthPositions();
+    const chars: string[] = new Array(weeks * cellWidth).fill(" ");
+    
+    for (const pos of positions) {
+      const startIdx = pos.weekIndex * cellWidth;
+      const monthChars = pos.month.split("");
+      for (let i = 0; i < monthChars.length && startIdx + i < chars.length; i++) {
+        chars[startIdx + i] = monthChars[i];
+      }
+    }
+    
+    return chars.join("");
+  });
+
+  const dayLabelWidth = () => isNarrowTerminal() ? 2 : 4;
+
+  const getCellStyle = (cellDate: string | null, level: number) => {
+    const isSelected = cellDate && (clickedCell() === cellDate || props.selectedDate === cellDate);
+    const baseColor = level === 0 ? "#666666" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4);
+    
+    if (isSelected) {
+      return { char: "▓▓", color: "#ffffff", bg: baseColor };
+    }
+    return { char: level === 0 ? "· " : "██", color: baseColor, bg: undefined };
+  };
+
+
 
   return (
     <box flexDirection="column" gap={1}>
       <box flexDirection="column">
-        <box flexDirection="row" gap={isNarrowTerminal() ? 0 : 1} marginLeft={4}>
-          <For each={monthLabels()}>
-            {(month) => <text dim>{isNarrowTerminal() ? month.padEnd(3) : month.padEnd(4)}</text>}
-          </For>
+        <box flexDirection="row">
+          <text dim>{" ".repeat(dayLabelWidth())}</text>
+          <text dim>{monthLabelRow()}</text>
         </box>
 
-        <For each={DAYS}>
-          {(day, dayIndex) => (
-            <box flexDirection="row">
-              <text dim>{isNarrowTerminal() ? " " : day.padStart(3) + " "}</text>
-              <For each={grid()[dayIndex()] || []}>
-                {(cell) => (
-                  <text
-                    fg={cell.level === 0 ? "gray" : getGradeColor(palette(), cell.level as 0 | 1 | 2 | 3 | 4)}
-                  >
-                    {cell.level === 0 ? "·" : "█"}
-                  </text>
-                )}
-              </For>
-            </box>
-          )}
-        </For>
+        {/* DEBUG: onMouseDown handler for grid click - keep for coordinate debugging */}
+        <box onMouseDown={(e: { x: number; y: number }) => {
+          const labelW = dayLabelWidth();
+          const col = Math.floor((e.x - labelW) / cellWidth);
+          const row = e.y - 2;
+          const gridRows = grid().length;
+          
+          setDebugInfo(`y=${e.y} row=${row} (y-2) col=${col}`);
+          
+          if (row < 0 || row >= gridRows) {
+            setDebugInfo(`y=${e.y} row=${row} OUT_OF_BOUNDS (0-6)`);
+            return;
+          }
+          if (col < 0) {
+            setDebugInfo(`x=${e.x} col=${col} OUT_OF_BOUNDS (label area)`);
+            return;
+          }
+          
+          const rowData = grid()[row];
+          if (!rowData || col >= rowData.length) {
+            setDebugInfo(`y=${e.y} row=${row} col=${col} NO_CELL`);
+            return;
+          }
+          
+          const cell = rowData[col];
+          if (!cell?.date) {
+            setDebugInfo(`y=${e.y} row=${row} col=${col} EMPTY_CELL`);
+            return;
+          }
+          
+          const newDate = clickedCell() === cell.date ? null : cell.date;
+          setClickedCell(newDate);
+          setDebugInfo(`y=${e.y} row=${row} col=${col} → ${newDate || 'deselected'}`);
+        }}>
+          <For each={DAYS}>
+            {(day, dayIndex) => (
+              <box flexDirection="row">
+                <text dim>{isNarrowTerminal() ? "  " : day.padStart(3) + " "}</text>
+                <For each={grid()[dayIndex()] || []}>
+                  {(cell) => {
+                    const style = getCellStyle(cell.date, cell.level);
+                    return (
+                      <text fg={style.color} bg={style.bg}>{style.char}</text>
+                    );
+                  }}
+                </For>
+              </box>
+            )}
+          </For>
+        </box>
+      </box>
+
+      {/* DEBUG: display click coordinates - keep for debugging */}
+      <box flexDirection="row" gap={2}>
+        <text fg="yellow">{`DEBUG: ${debugInfo()} | selected: ${clickedCell() || 'none'}`}</text>
       </box>
 
       <box flexDirection="row" gap={2} marginTop={1}>
@@ -57,70 +178,94 @@ export function StatsView(props: StatsViewProps) {
           <For each={[0, 1, 2, 3, 4]}>
             {(level) => (
               <text
-                fg={level === 0 ? "gray" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4)}
+                fg={level === 0 ? "#666666" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4)}
               >
-                {level === 0 ? "·" : "█"}
+                {level === 0 ? "· " : "██"}
               </text>
             )}
           </For>
         </box>
         <text dim>More</text>
+        <Show when={!isNarrowTerminal()}>
+          <text dim>|</text>
+          <text dim>Click on a day to see breakdown</text>
+        </Show>
       </box>
 
-      <box flexDirection="column" marginTop={1}>
-        <box flexDirection={isNarrowTerminal() ? "column" : "row"} gap={isNarrowTerminal() ? 0 : 4}>
-          <box flexDirection="column">
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Model:" : "Favorite model:"}</text>
-              <text fg={getModelColor(props.data.stats.favoriteModel)}>{props.data.stats.favoriteModel}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>Sessions:</text>
-              <text fg="cyan">{props.data.stats.sessions.toLocaleString()}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Streak:" : "Current streak:"}</text>
-              <text fg="cyan">{`${props.data.stats.currentStreak} days`}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Active:" : "Active days:"}</text>
-              <text fg="cyan">{`${props.data.stats.activeDays}/${props.data.stats.totalDays}`}</text>
-            </box>
-          </box>
-
-          <box flexDirection="column">
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Tokens:" : "Total tokens:"}</text>
-              <text fg="cyan">{formatTokens(props.data.stats.totalTokens)}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Session:" : "Longest session:"}</text>
-              <text fg="cyan">{props.data.stats.longestSession}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Max streak:" : "Longest streak:"}</text>
-              <text fg="cyan">{`${props.data.stats.longestStreak} days`}</text>
-            </box>
-            <box flexDirection="row" gap={1}>
-              <text dim>{isNarrowTerminal() ? "Peak:" : "Peak hour:"}</text>
-              <text fg="cyan">{props.data.stats.peakHour}</text>
-            </box>
-          </box>
-        </box>
-      </box>
-
-      <Show when={!isNarrowTerminal()}>
-        <box marginTop={1}>
-          <text fg="yellow" italic>{`Your total spending is $${props.data.totalCost.toFixed(2)} on AI coding assistants!`}</text>
-        </box>
+      <Show when={selectedBreakdown()}>
+        <DateBreakdownPanel breakdown={selectedBreakdown()!} isNarrow={isNarrowTerminal()} palette={palette()} />
       </Show>
-      <Show when={isNarrowTerminal()}>
-        <box marginTop={1}>
-          <text fg="yellow" italic>{`Total: $${props.data.totalCost.toFixed(2)}`}</text>
+
+      <Show when={!selectedBreakdown()}>
+        <box flexDirection="column" marginTop={1}>
+          <box flexDirection={isNarrowTerminal() ? "column" : "row"} gap={isNarrowTerminal() ? 0 : 4}>
+            <box flexDirection="column">
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Model:" : "Favorite model:"}</text>
+                <text fg={getModelColor(props.data.stats.favoriteModel)}>{props.data.stats.favoriteModel}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>Sessions:</text>
+                <text fg="cyan">{props.data.stats.sessions.toLocaleString()}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Streak:" : "Current streak:"}</text>
+                <text fg="cyan">{`${props.data.stats.currentStreak} days`}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Active:" : "Active days:"}</text>
+                <text fg="cyan">{`${props.data.stats.activeDays}/${props.data.stats.totalDays}`}</text>
+              </box>
+            </box>
+
+            <box flexDirection="column">
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Tokens:" : "Total tokens:"}</text>
+                <text fg="cyan">{formatTokens(props.data.stats.totalTokens)}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Session:" : "Longest session:"}</text>
+                <text fg="cyan">{props.data.stats.longestSession}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Max streak:" : "Longest streak:"}</text>
+                <text fg="cyan">{`${props.data.stats.longestStreak} days`}</text>
+              </box>
+              <box flexDirection="row" gap={1}>
+                <text dim>{isNarrowTerminal() ? "Peak:" : "Peak hour:"}</text>
+                <text fg="cyan">{props.data.stats.peakHour}</text>
+              </box>
+            </box>
+          </box>
         </box>
+
+        <Show when={!isNarrowTerminal()}>
+          <box marginTop={1}>
+            <text fg="yellow" italic>{`Your total spending is $${props.data.totalCost.toFixed(2)} on AI coding assistants!`}</text>
+          </box>
+        </Show>
+        <Show when={isNarrowTerminal()}>
+          <box marginTop={1}>
+            <text fg="yellow" italic>{`Total: $${props.data.totalCost.toFixed(2)}`}</text>
+          </box>
+        </Show>
       </Show>
     </box>
   );
 }
 
+interface DateBreakdownPanelProps {
+  breakdown: DailyModelBreakdown;
+  isNarrow: boolean;
+  palette: ReturnType<typeof getPalette>;
+}
 
+function DateBreakdownPanel(props: DateBreakdownPanelProps) {
+  return (
+    <box flexDirection="column" marginTop={1}>
+      <text bold fg="white">{`Selected: ${props.breakdown.date}`}</text>
+      <text fg="green">{formatCost(props.breakdown.cost)}</text>
+      <text dim>{`Models: ${props.breakdown.models?.length || 0}`}</text>
+    </box>
+  );
+}

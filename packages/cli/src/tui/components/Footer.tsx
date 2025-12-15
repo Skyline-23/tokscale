@@ -1,5 +1,5 @@
-import { Show } from "solid-js";
-import type { SourceType, SortType, TabType } from "../types/index.js";
+import { Show, createSignal, createMemo, onMount, onCleanup } from "solid-js";
+import type { SourceType, SortType, TabType, LoadingPhase } from "../types/index.js";
 import type { ColorPaletteName } from "../config/themes.js";
 import type { TotalBreakdown } from "../hooks/useData.js";
 import { getPalette } from "../config/themes.js";
@@ -17,11 +17,25 @@ interface FooterProps {
   totalItems?: number;
   colorPalette: ColorPaletteName;
   statusMessage?: string | null;
+  isRefreshing?: boolean;
+  loadingPhase?: LoadingPhase;
+  cacheTimestamp?: number | null;
   width?: number;
   onSourceToggle?: (source: SourceType) => void;
   onSortChange?: (sort: SortType) => void;
   onPaletteChange?: () => void;
   onRefresh?: () => void;
+}
+
+function formatTimeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 export function Footer(props: FooterProps) {
@@ -99,6 +113,14 @@ export function Footer(props: FooterProps) {
           <text fg="green" bold>{props.statusMessage}</text>
         </Show>
       </box>
+      <Show when={props.isRefreshing}>
+        <LoadingStatusLine phase={props.loadingPhase} />
+      </Show>
+      <Show when={!props.isRefreshing && props.cacheTimestamp}>
+        <box flexDirection="row">
+          <text dim>{`Last updated: ${formatTimeAgo(props.cacheTimestamp!)}`}</text>
+        </box>
+      </Show>
     </box>
   );
 }
@@ -137,6 +159,74 @@ function SortButton(props: SortButtonProps) {
       <text fg={props.active ? "white" : "gray"} bold={props.active}>
         {props.label}
       </text>
+    </box>
+  );
+}
+
+const SPINNER_COLORS = ["#00FFFF", "#00D7D7", "#00AFAF", "#008787", "#666666", "#666666"];
+const SPINNER_WIDTH = 6;
+const SPINNER_HOLD_START = 20;
+const SPINNER_HOLD_END = 6;
+const SPINNER_TRAIL = 3;
+const SPINNER_INTERVAL = 40;
+
+const PHASE_MESSAGES: Record<LoadingPhase, string> = {
+  "idle": "Initializing...",
+  "loading-pricing": "Loading pricing data...",
+  "syncing-cursor": "Syncing Cursor data...",
+  "parsing-sources": "Parsing session files...",
+  "finalizing-report": "Finalizing report...",
+  "complete": "Complete",
+};
+
+interface LoadingStatusLineProps {
+  phase?: LoadingPhase;
+}
+
+function LoadingStatusLine(props: LoadingStatusLineProps) {
+  const [frame, setFrame] = createSignal(0);
+
+  onMount(() => {
+    const id = setInterval(() => setFrame(f => f + 1), SPINNER_INTERVAL);
+    onCleanup(() => clearInterval(id));
+  });
+
+  const getSpinnerState = () => {
+    const forwardFrames = SPINNER_WIDTH;
+    const backwardFrames = SPINNER_WIDTH - 1;
+    const totalCycle = forwardFrames + SPINNER_HOLD_END + backwardFrames + SPINNER_HOLD_START;
+    const normalized = frame() % totalCycle;
+
+    if (normalized < forwardFrames) {
+      return { position: normalized, forward: true };
+    } else if (normalized < forwardFrames + SPINNER_HOLD_END) {
+      return { position: SPINNER_WIDTH - 1, forward: true };
+    } else if (normalized < forwardFrames + SPINNER_HOLD_END + backwardFrames) {
+      return { position: SPINNER_WIDTH - 2 - (normalized - forwardFrames - SPINNER_HOLD_END), forward: false };
+    }
+    return { position: 0, forward: false };
+  };
+
+  const getCharProps = (index: number) => {
+    const { position, forward } = getSpinnerState();
+    const distance = forward ? position - index : index - position;
+    if (distance >= 0 && distance < SPINNER_TRAIL) {
+      return { char: "■", color: SPINNER_COLORS[distance] };
+    }
+    return { char: "⬝", color: "#444444" };
+  };
+
+  const message = () => props.phase ? PHASE_MESSAGES[props.phase] : "Refreshing...";
+
+  return (
+    <box flexDirection="row" gap={1}>
+      <box flexDirection="row" gap={0}>
+        {Array.from({ length: SPINNER_WIDTH }, (_, i) => {
+          const { char, color } = getCharProps(i);
+          return <text fg={color}>{char}</text>;
+        })}
+      </box>
+      <text dim>{message()}</text>
     </box>
   );
 }

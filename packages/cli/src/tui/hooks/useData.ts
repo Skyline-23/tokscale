@@ -11,6 +11,8 @@ import type {
   TotalBreakdown,
   TUIData,
   ChartDataPoint,
+  LoadingPhase,
+  DailyModelBreakdown,
 } from "../types/index.js";
 import {
   parseLocalSourcesAsync,
@@ -21,6 +23,7 @@ import {
 import { PricingFetcher } from "../../pricing.js";
 import { syncCursorCache, loadCursorCredentials } from "../../cursor.js";
 import { getModelColor } from "../utils/colors.js";
+import { loadCachedData, saveCachedData, isCacheStale } from "../config/settings.js";
 
 export type {
   SortType,
@@ -32,6 +35,7 @@ export type {
   GridCell,
   TotalBreakdown,
   TUIData,
+  LoadingPhase,
 };
 
 export interface DateFilters {
@@ -44,23 +48,33 @@ function buildContributionGrid(contributions: ContributionDay[]): GridCell[][] {
   const grid: GridCell[][] = Array.from({ length: 7 }, () => []);
 
   const today = new Date();
-  const startYear = today.getFullYear();
-  const startMonth = today.getMonth();
-  const startDay = today.getDate() - 364;
-  const startDate = new Date(startYear, startMonth, startDay);
+  const todayStr = today.toISOString().split("T")[0];
+  
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 364);
+  while (startDate.getDay() !== 0) {
+    startDate.setDate(startDate.getDate() - 1);
+  }
+
+  const endDate = new Date(today);
+  while (endDate.getDay() !== 6) {
+    endDate.setDate(endDate.getDate() + 1);
+  }
 
   const contributionMap = new Map(contributions.map(c => [c.date, c.level]));
 
   const currentDate = new Date(startDate);
-  while (currentDate <= today) {
+  while (currentDate <= endDate) {
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, "0");
     const day = String(currentDate.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
     const dayOfWeek = currentDate.getDay();
-    const level = contributionMap.get(dateStr) || 0;
+    
+    const isFuture = dateStr > todayStr;
+    const level = isFuture ? 0 : (contributionMap.get(dateStr) || 0);
 
-    grid[dayOfWeek].push({ date: dateStr, level });
+    grid[dayOfWeek].push({ date: isFuture ? null : dateStr, level });
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -382,6 +396,30 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     cost: report.totalCost,
   };
 
+  const dailyBreakdowns = new Map<string, DailyModelBreakdown>();
+  for (const contrib of graph.contributions) {
+    const models = contrib.sources.map((source: { modelId: string; source: string; tokens: { input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number }; cost: number; messages: number }) => ({
+      modelId: source.modelId,
+      source: source.source,
+      tokens: {
+        input: source.tokens.input,
+        output: source.tokens.output,
+        cacheRead: source.tokens.cacheRead,
+        cacheWrite: source.tokens.cacheWrite,
+        reasoning: source.tokens.reasoning || 0,
+      },
+      cost: source.cost,
+      messages: source.messages,
+    }));
+    
+    dailyBreakdowns.set(contrib.date, {
+      date: contrib.date,
+      cost: contrib.totals.cost,
+      totalTokens: contrib.totals.tokens,
+      models: models.sort((a, b) => b.cost - a.cost),
+    });
+  }
+
   return {
     modelEntries,
     dailyEntries,
@@ -393,30 +431,88 @@ async function loadData(enabledSources: Set<SourceType>, dateFilters?: DateFilte
     modelCount: modelEntries.length,
     chartData,
     topModels,
+    dailyBreakdowns,
   };
 }
 
 export function useData(enabledSources: Accessor<Set<SourceType>>, dateFilters?: DateFilters) {
-  const [data, setData] = createSignal<TUIData | null>(null);
-  const [loading, setLoading] = createSignal(true);
+  const initialSources = enabledSources();
+  const initialCachedData = loadCachedData(initialSources);
+  const initialCacheIsStale = initialCachedData ? isCacheStale(initialSources) : true;
+  
+  const [data, setData] = createSignal<TUIData | null>(initialCachedData);
+  const [loading, setLoading] = createSignal(!initialCachedData);
   const [error, setError] = createSignal<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = createSignal(0);
+  const [loadingPhase, setLoadingPhase] = createSignal<LoadingPhase>(
+    initialCachedData ? (initialCacheIsStale ? "loading-pricing" : "complete") : "idle"
+  );
+  const [isRefreshing, setIsRefreshing] = createSignal(initialCachedData ? initialCacheIsStale : false);
+
+  const [forceRefresh, setForceRefresh] = createSignal(false);
 
   const refresh = () => {
+    setForceRefresh(true);
     setRefreshTrigger(prev => prev + 1);
   };
+
+  const doLoad = (sources: Set<SourceType>, skipCacheCheck = false) => {
+    const shouldSkipCache = skipCacheCheck || forceRefresh();
+    
+    if (!shouldSkipCache) {
+      const cachedData = loadCachedData(sources);
+      const cacheIsStale = isCacheStale(sources);
+      
+      if (cachedData && !cacheIsStale) {
+        setData(cachedData);
+        setLoading(false);
+        setLoadingPhase("complete");
+        setIsRefreshing(false);
+        return;
+      }
+      
+      if (cachedData) {
+        setData(cachedData);
+        setLoading(false);
+        setIsRefreshing(true);
+        setLoadingPhase("loading-pricing");
+      } else {
+        setLoading(true);
+        setLoadingPhase("loading-pricing");
+      }
+    } else {
+      setIsRefreshing(true);
+      setLoadingPhase("loading-pricing");
+      setForceRefresh(false);
+    }
+    
+    setError(null);
+    loadData(sources, dateFilters)
+      .then((freshData) => {
+        setData(freshData);
+        saveCachedData(freshData, sources);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => {
+        setLoading(false);
+        setIsRefreshing(false);
+        setLoadingPhase("complete");
+      });
+  };
+
+  if (initialCachedData && initialCacheIsStale) {
+    doLoad(initialSources, true);
+  } else if (!initialCachedData) {
+    doLoad(initialSources, false);
+  }
 
   createEffect(on(
     () => [enabledSources(), refreshTrigger()] as const,
     ([sources]) => {
-      setLoading(true);
-      setError(null);
-      loadData(sources, dateFilters)
-        .then(setData)
-        .catch((e) => setError(e.message))
-        .finally(() => setLoading(false));
-    }
+      doLoad(sources);
+    },
+    { defer: true }
   ));
 
-  return { data, loading, error, refresh };
+  return { data, loading, error, refresh, loadingPhase, isRefreshing };
 }

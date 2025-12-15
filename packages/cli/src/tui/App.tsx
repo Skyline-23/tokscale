@@ -11,7 +11,7 @@ import { LoadingSpinner } from "./components/LoadingSpinner.js";
 import { useData, type DateFilters } from "./hooks/useData.js";
 import type { ColorPaletteName } from "./config/themes.js";
 import { DEFAULT_PALETTE, getPaletteNames } from "./config/themes.js";
-import { loadSettings, saveSettings } from "./config/settings.js";
+import { loadSettings, saveSettings, getCacheTimestamp } from "./config/settings.js";
 import { TABS, ALL_SOURCES, type TUIOptions, type TabType, type SortType, type SourceType } from "./types/index.js";
 
 export type AppProps = TUIOptions;
@@ -53,7 +53,11 @@ export function App(props: AppProps) {
     year: props.year,
   };
 
-  const { data, loading, error, refresh } = useData(() => enabledSources(), dateFilters);
+  const { data, loading, error, refresh, loadingPhase, isRefreshing } = useData(() => enabledSources(), dateFilters);
+  
+  const cacheTimestamp = () => !isRefreshing() && !loading() ? getCacheTimestamp() : null;
+  
+  const [selectedDate, setSelectedDate] = createSignal<string | null>(null);
 
   const [statusMessage, setStatusMessage] = createSignal<string | null>(null);
   let statusTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -246,6 +250,7 @@ export function App(props: AppProps) {
     setActiveTab(tab);
     setSelectedIndex(0);
     setScrollOffset(0);
+    setSelectedDate(null);
   };
 
   return (
@@ -255,7 +260,7 @@ export function App(props: AppProps) {
       <box flexDirection="column" flexGrow={1} paddingX={1}>
         <Switch>
           <Match when={loading()}>
-            <LoadingSpinner />
+            <LoadingSpinner phase={loadingPhase()} />
           </Match>
           <Match when={error()}>
             <box justifyContent="center" alignItems="center" flexGrow={1}>
@@ -301,6 +306,8 @@ export function App(props: AppProps) {
                   height={contentHeight()}
                   colorPalette={colorPalette()}
                   width={columns()}
+                  selectedDate={selectedDate()}
+                  onDateSelect={setSelectedDate}
                 />
               </Match>
             </Switch>
@@ -319,6 +326,9 @@ export function App(props: AppProps) {
         totalItems={data()?.topModels.length}
         colorPalette={colorPalette()}
         statusMessage={statusMessage()}
+        isRefreshing={isRefreshing()}
+        loadingPhase={loadingPhase()}
+        cacheTimestamp={cacheTimestamp()}
         width={columns()}
         onSourceToggle={handleSourceToggle}
         onSortChange={handleSortChange}
