@@ -325,6 +325,7 @@ export function App(props: AppProps) {
         colorPalette={colorPalette()}
         statusMessage={statusMessage()}
         isRefreshing={isRefreshing()}
+        loadingPhase={loadingPhase()}
         width={columns()}
         onSourceToggle={handleSourceToggle}
         onSortChange={handleSortChange}
