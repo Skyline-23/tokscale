@@ -83,7 +83,7 @@ export function StatsView(props: StatsViewProps) {
               <For each={grid()[dayIndex()] || []}>
                 {(cell) => (
                   <text
-                    fg={cell.level === 0 ? "gray" : getGradeColor(palette(), cell.level as 0 | 1 | 2 | 3 | 4)}
+                    fg={cell.level === 0 ? "#666666" : getGradeColor(palette(), cell.level as 0 | 1 | 2 | 3 | 4)}
                   >
                     {cell.level === 0 ? "· " : "██"}
                   </text>
@@ -100,7 +100,7 @@ export function StatsView(props: StatsViewProps) {
           <For each={[0, 1, 2, 3, 4]}>
             {(level) => (
               <text
-                fg={level === 0 ? "gray" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4)}
+                fg={level === 0 ? "#666666" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4)}
               >
                 {level === 0 ? "· " : "██"}
               </text>
