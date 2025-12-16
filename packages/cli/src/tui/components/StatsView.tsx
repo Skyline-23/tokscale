@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createSignal, type Setter } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import type { TUIData } from "../hooks/useData.js";
 import type { ColorPaletteName } from "../config/themes.js";
 import type { DailyModelBreakdown } from "../types/index.js";
@@ -13,7 +13,6 @@ interface StatsViewProps {
   colorPalette: ColorPaletteName;
   width?: number;
   selectedDate?: string | null;
-  onDateSelect?: Setter<string | null>;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -193,7 +192,7 @@ export function StatsView(props: StatsViewProps) {
       </box>
 
       <Show when={selectedBreakdown()}>
-        <DateBreakdownPanel breakdown={selectedBreakdown()!} isNarrow={isNarrowTerminal()} palette={palette()} />
+        <DateBreakdownPanel breakdown={selectedBreakdown()!} isNarrow={isNarrowTerminal()} />
       </Show>
 
       <Show when={!selectedBreakdown()}>
@@ -257,7 +256,6 @@ export function StatsView(props: StatsViewProps) {
 interface DateBreakdownPanelProps {
   breakdown: DailyModelBreakdown;
   isNarrow: boolean;
-  palette: ReturnType<typeof getPalette>;
 }
 
 function DateBreakdownPanel(props: DateBreakdownPanelProps) {
@@ -307,8 +305,12 @@ function DateBreakdownPanel(props: DateBreakdownPanelProps) {
                         <text fg="cyan">{formatTokens(model.tokens.output)}</text>
                       </Show>
                       <Show when={model.tokens.cacheRead > 0}>
-                        <text dim>Cache:</text>
+                        <text dim>CacheR:</text>
                         <text fg="cyan">{formatTokens(model.tokens.cacheRead)}</text>
+                      </Show>
+                      <Show when={model.tokens.cacheWrite > 0}>
+                        <text dim>CacheW:</text>
+                        <text fg="cyan">{formatTokens(model.tokens.cacheWrite)}</text>
                       </Show>
                     </box>
                   </box>
@@ -319,10 +321,7 @@ function DateBreakdownPanel(props: DateBreakdownPanelProps) {
         </For>
       </box>
       
-      <box flexDirection="row" marginTop={1} gap={2}>
-        <text dim>Total:</text>
-        <text fg="cyan">{formatTokens(props.breakdown.totalTokens)} tokens</text>
-        <text dim>|</text>
+      <box flexDirection="row" marginTop={1}>
         <text dim>Click another day or same day to close</text>
       </box>
     </box>
