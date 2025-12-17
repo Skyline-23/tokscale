@@ -1,11 +1,11 @@
-import { For, Show, createMemo, createSignal, type Setter } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import type { TUIData } from "../hooks/useData.js";
 import type { ColorPaletteName } from "../config/themes.js";
-import type { DailyModelBreakdown } from "../types/index.js";
 import { getPalette, getGradeColor } from "../config/themes.js";
 import { getModelColor } from "../utils/colors.js";
-import { formatTokens, formatCost } from "../utils/format.js";
+import { formatTokens } from "../utils/format.js";
 import { isNarrow } from "../utils/responsive.js";
+import { DateBreakdownPanel } from "./DateBreakdownPanel.js";
 
 interface StatsViewProps {
   data: TUIData;
@@ -13,28 +13,15 @@ interface StatsViewProps {
   colorPalette: ColorPaletteName;
   width?: number;
   selectedDate?: string | null;
-  onDateSelect?: Setter<string | null>;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTHS_SHORT = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
-const SOURCE_COLORS: Record<string, string> = {
-  opencode: "#22c55e",
-  claude: "#f97316",
-  codex: "#3b82f6",
-  cursor: "#a855f7",
-  gemini: "#06b6d4",
-};
 
 interface MonthLabel {
   month: string;
   weekIndex: number;
-}
-
-function formatDateDisplay(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 export function StatsView(props: StatsViewProps) {
@@ -44,8 +31,6 @@ export function StatsView(props: StatsViewProps) {
   const cellWidth = 2;
   
   const [clickedCell, setClickedCell] = createSignal<string | null>(null);
-  // DEBUG: keep this for debugging mouse click coordinate mapping
-  const [debugInfo, setDebugInfo] = createSignal<string>("No click yet");
   
   const selectedBreakdown = createMemo(() => {
     const date = clickedCell();
@@ -66,7 +51,7 @@ export function StatsView(props: StatsViewProps) {
     for (let weekIdx = 0; weekIdx < sundayRow.length; weekIdx++) {
       const cell = sundayRow[weekIdx];
       if (!cell.date) continue;
-      const month = new Date(cell.date).getMonth();
+      const month = new Date(cell.date + "T00:00:00").getMonth();
       if (month !== lastMonth) {
         positions.push({ month: monthNames[month], weekIndex: weekIdx });
         lastMonth = month;
@@ -95,15 +80,11 @@ export function StatsView(props: StatsViewProps) {
 
   const dayLabelWidth = () => isNarrowTerminal() ? 2 : 4;
 
-  const getCellStyle = (cellDate: string | null, level: number) => {
-    const isSelected = cellDate && (clickedCell() === cellDate || props.selectedDate === cellDate);
-    const baseColor = level === 0 ? "#666666" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4);
-    
-    if (isSelected) {
-      return { char: "▓▓", color: "#ffffff", bg: baseColor };
-    }
-    return { char: level === 0 ? "· " : "██", color: baseColor, bg: undefined };
-  };
+  const isSelected = (cellDate: string | null) => 
+    cellDate && (clickedCell() === cellDate || props.selectedDate === cellDate);
+  
+  const getCellColor = (level: number) => 
+    level === 0 ? "#666666" : getGradeColor(palette(), level as 0 | 1 | 2 | 3 | 4);
 
 
 
@@ -115,61 +96,50 @@ export function StatsView(props: StatsViewProps) {
           <text dim>{monthLabelRow()}</text>
         </box>
 
-        {/* DEBUG: onMouseDown handler for grid click - keep for coordinate debugging */}
         <box onMouseDown={(e: { x: number; y: number }) => {
           const labelW = dayLabelWidth();
           const col = Math.floor((e.x - labelW) / cellWidth);
           const row = e.y - 2;
           const gridRows = grid().length;
           
-          setDebugInfo(`y=${e.y} row=${row} (y-2) col=${col}`);
-          
           if (row < 0 || row >= gridRows) {
-            setDebugInfo(`y=${e.y} row=${row} OUT_OF_BOUNDS (0-6)`);
             return;
           }
           if (col < 0) {
-            setDebugInfo(`x=${e.x} col=${col} OUT_OF_BOUNDS (label area)`);
             return;
           }
           
           const rowData = grid()[row];
           if (!rowData || col >= rowData.length) {
-            setDebugInfo(`y=${e.y} row=${row} col=${col} NO_CELL`);
             return;
           }
           
           const cell = rowData[col];
           if (!cell?.date) {
-            setDebugInfo(`y=${e.y} row=${row} col=${col} EMPTY_CELL`);
             return;
           }
           
           const newDate = clickedCell() === cell.date ? null : cell.date;
           setClickedCell(newDate);
-          setDebugInfo(`y=${e.y} row=${row} col=${col} → ${newDate || 'deselected'}`);
         }}>
           <For each={DAYS}>
             {(day, dayIndex) => (
               <box flexDirection="row">
                 <text dim>{isNarrowTerminal() ? "  " : day.padStart(3) + " "}</text>
                 <For each={grid()[dayIndex()] || []}>
-                  {(cell) => {
-                    const style = getCellStyle(cell.date, cell.level);
-                    return (
-                      <text fg={style.color} bg={style.bg}>{style.char}</text>
-                    );
-                  }}
+                  {(cell) => (
+                    <text 
+                      fg={isSelected(cell.date) ? "#ffffff" : getCellColor(cell.level)} 
+                      bg={isSelected(cell.date) ? getCellColor(cell.level) : undefined}
+                    >
+                      {isSelected(cell.date) ? "▓▓" : (cell.level === 0 ? "· " : "██")}
+                    </text>
+                  )}
                 </For>
               </box>
             )}
           </For>
         </box>
-      </box>
-
-      {/* DEBUG: display click coordinates - keep for debugging */}
-      <box flexDirection="row" gap={2}>
-        <text fg="yellow">{`DEBUG: ${debugInfo()} | selected: ${clickedCell() || 'none'}`}</text>
       </box>
 
       <box flexDirection="row" gap={2} marginTop={1}>
@@ -193,7 +163,7 @@ export function StatsView(props: StatsViewProps) {
       </box>
 
       <Show when={selectedBreakdown()}>
-        <DateBreakdownPanel breakdown={selectedBreakdown()!} isNarrow={isNarrowTerminal()} palette={palette()} />
+        <DateBreakdownPanel breakdown={selectedBreakdown()!} isNarrow={isNarrowTerminal()} />
       </Show>
 
       <Show when={!selectedBreakdown()}>
@@ -250,22 +220,6 @@ export function StatsView(props: StatsViewProps) {
           </box>
         </Show>
       </Show>
-    </box>
-  );
-}
-
-interface DateBreakdownPanelProps {
-  breakdown: DailyModelBreakdown;
-  isNarrow: boolean;
-  palette: ReturnType<typeof getPalette>;
-}
-
-function DateBreakdownPanel(props: DateBreakdownPanelProps) {
-  return (
-    <box flexDirection="column" marginTop={1}>
-      <text bold fg="white">{`Selected: ${props.breakdown.date}`}</text>
-      <text fg="green">{formatCost(props.breakdown.cost)}</text>
-      <text dim>{`Models: ${props.breakdown.models?.length || 0}`}</text>
     </box>
   );
 }

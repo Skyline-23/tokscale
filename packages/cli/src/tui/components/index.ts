@@ -8,3 +8,8 @@ export { BarChart } from "./BarChart.js";
 export type { ChartDataPoint } from "./BarChart.js";
 export { Legend } from "./Legend.js";
 export { LoadingSpinner } from "./LoadingSpinner.js";
+export { ModelRow } from "./ModelRow.js";
+export { TokenBreakdown } from "./TokenBreakdown.js";
+export type { TokenBreakdownData } from "./TokenBreakdown.js";
+export { DateBreakdownPanel } from "./DateBreakdownPanel.js";
+export type { DateBreakdownPanelProps } from "./DateBreakdownPanel.js";

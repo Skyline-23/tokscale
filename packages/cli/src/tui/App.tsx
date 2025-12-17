@@ -307,7 +307,6 @@ export function App(props: AppProps) {
                   colorPalette={colorPalette()}
                   width={columns()}
                   selectedDate={selectedDate()}
-                  onDateSelect={setSelectedDate}
                 />
               </Match>
             </Switch>
