@@ -165,8 +165,7 @@ jobs:
           tool: cargo-zigbuild
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
-        working-directory: packages/core
+        run: bun install --ignore-scripts
 
       - name: Build
         run: ${{ matrix.settings.build }}
@@ -200,8 +199,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
-        working-directory: packages/core
+        run: bun install --ignore-scripts
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
