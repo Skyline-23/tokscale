@@ -465,87 +465,94 @@ export interface FinalizeOptions {
 // Async Subprocess Wrappers (Non-blocking for UI)
 // =============================================================================
 
-import { spawn } from "bun";
+import { spawn as nodeSpawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DEFAULT_TIMEOUT_MS = 120_000; // 2 minutes default
+const DEFAULT_TIMEOUT_MS = 120_000;
 const NATIVE_TIMEOUT_MS = parseInt(
   process.env.TOKSCALE_NATIVE_TIMEOUT_MS || String(DEFAULT_TIMEOUT_MS),
   10
 );
 
-// Timeout-related exit codes
-const TIMEOUT_EXIT_CODES = new Set([
-  124,  // GNU timeout default
-  143,  // 128 + 15 (SIGTERM)
-  137,  // 128 + 9 (SIGKILL - when SIGTERM fails)
-]);
+const TIMEOUT_EXIT_CODES = new Set([124, 143, 137]);
+
+const isBun = typeof (globalThis as Record<string, unknown>).Bun !== "undefined";
 
 async function runInSubprocess<T>(method: string, args: unknown[]): Promise<T> {
-  const runnerPath = join(__dirname, "native-runner.ts");
+  const runnerPath = join(__dirname, "native-runner.js");
   const input = JSON.stringify({ method, args });
 
-  const proc = spawn({
-    cmd: ["bun", "run", runnerPath],
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-    timeout: NATIVE_TIMEOUT_MS,
-    killSignal: "SIGTERM",
-  });
+  return new Promise((resolve, reject) => {
+    const cmd = isBun ? "bun" : "node";
+    const proc = nodeSpawn(cmd, ["--experimental-strip-types", runnerPath], {
+      stdio: ["pipe", "pipe", "pipe"],
+      timeout: NATIVE_TIMEOUT_MS,
+    });
 
-  // Helper to consume streams (prevents resource leaks)
-  const consumeStreams = async (): Promise<{ stdout: string; stderr: string }> => {
-    const [stdout, stderr] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-    ]);
-    return { stdout, stderr };
-  };
+    let stdout = "";
+    let stderr = "";
+    let killed = false;
 
-  try {
-    proc.stdin.write(input);
-    proc.stdin.end();
-  } catch (e) {
-    proc.kill("SIGTERM");
-    // Must consume streams even after kill to prevent resource leaks
-    await consumeStreams().catch(() => {}); // Ignore stream errors after kill
-    await proc.exited.catch(() => {}); // Wait for process to exit
-    throw new Error(`Failed to write to subprocess stdin: ${(e as Error).message}`);
-  }
+    const timeoutId = setTimeout(() => {
+      killed = true;
+      proc.kill("SIGTERM");
+    }, NATIVE_TIMEOUT_MS);
 
-  const [{ stdout, stderr }, exitCode] = await Promise.all([
-    consumeStreams(),
-    proc.exited,
-  ]);
+    proc.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
 
-  // Check for timeout exit codes
-  if (TIMEOUT_EXIT_CODES.has(exitCode)) {
-    throw new Error(
-      `Subprocess '${method}' timed out after ${NATIVE_TIMEOUT_MS}ms (exit code ${exitCode})`
-    );
-  }
+    proc.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
 
-  if (exitCode !== 0) {
-    let errorMsg = stderr || `Process exited with code ${exitCode}`;
+    proc.on("close", (code) => {
+      clearTimeout(timeoutId);
+
+      if (killed || TIMEOUT_EXIT_CODES.has(code || 0)) {
+        reject(new Error(
+          `Subprocess '${method}' timed out after ${NATIVE_TIMEOUT_MS}ms (exit code ${code})`
+        ));
+        return;
+      }
+
+      if (code !== 0) {
+        let errorMsg = stderr || `Process exited with code ${code}`;
+        try {
+          const parsed = JSON.parse(stderr);
+          if (parsed.error) errorMsg = parsed.error;
+        } catch {}
+        reject(new Error(`Subprocess '${method}' failed: ${errorMsg}`));
+        return;
+      }
+
+      try {
+        resolve(JSON.parse(stdout) as T);
+      } catch (e) {
+        reject(new Error(
+          `Failed to parse subprocess output: ${(e as Error).message}\nstdout: ${stdout.slice(0, 500)}`
+        ));
+      }
+    });
+
+    proc.on("error", (err) => {
+      clearTimeout(timeoutId);
+      reject(new Error(`Failed to spawn subprocess: ${err.message}`));
+    });
+
     try {
-      const parsed = JSON.parse(stderr);
-      if (parsed.error) errorMsg = parsed.error;
-    } catch {}
-    throw new Error(`Subprocess '${method}' failed: ${errorMsg}`);
-  }
-
-  try {
-    return JSON.parse(stdout) as T;
-  } catch (e) {
-    throw new Error(
-      `Failed to parse subprocess output: ${(e as Error).message}\nstdout: ${stdout.slice(0, 500)}`
-    );
-  }
+      proc.stdin.write(input);
+      proc.stdin.end();
+    } catch (e) {
+      clearTimeout(timeoutId);
+      proc.kill("SIGTERM");
+      reject(new Error(`Failed to write to subprocess stdin: ${(e as Error).message}`));
+    }
+  });
 }
 
 export async function parseLocalSourcesAsync(options: LocalParseOptions): Promise<ParsedMessages> {

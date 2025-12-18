@@ -1,6 +1,6 @@
 {
   "name": "@tokscale/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Calculate token prices from OpenCode, Claude Code, Codex, Gemini, and Cursor sessions",
   "license": "MIT",
   "type": "module",
