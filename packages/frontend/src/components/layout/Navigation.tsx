@@ -53,8 +53,8 @@ export function Navigation() {
           <Image
             src="/tokscale-logo.svg"
             alt="tokscale"
-            width={118}
-            height={25}
+            width={140}
+            height={32}
             priority
           />
         </Link>

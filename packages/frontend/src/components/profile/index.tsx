@@ -90,7 +90,7 @@ export function ProfileHeader({ user, stats, lastUpdated }: ProfileHeaderProps) 
         </div>
 
         <div className="flex flex-row items-center gap-7 h-[124px] flex-1">
-          <div className="flex flex-col gap-[15px] flex-1 min-w-[120px]">
+          <div className="flex flex-col gap-[8px] flex-1 min-w-[120px]">
             <span
               className="text-base font-semibold leading-none"
               style={{ color: "var(--color-accent-blue)" }}
@@ -110,7 +110,7 @@ export function ProfileHeader({ user, stats, lastUpdated }: ProfileHeaderProps) 
             </span>
           </div>
 
-          <div className="flex flex-col gap-[15px] flex-1 min-w-[120px]">
+          <div className="flex flex-col gap-[8px] flex-1 min-w-[120px]">
             <span
               className="text-base font-semibold leading-none"
               style={{ color: "var(--color-fg-default)" }}

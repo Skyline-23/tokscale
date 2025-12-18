@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export function Footer() {
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 pb-10">
+    <div className="w-full max-w-7xl mx-auto px-6">
       <footer className="relative w-full h-[436px] rounded-[20px] overflow-hidden bg-gradient-to-b from-black to-[#141415]">
         <div className="absolute top-[52px] left-[60px] flex flex-col gap-[21px] z-10">
           <div className="relative w-[107.29px] h-[100px]">

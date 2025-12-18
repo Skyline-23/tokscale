@@ -52,7 +52,7 @@ export function BlackholeHero() {
             fontFamily: "Figtree, var(--font-geist-sans), sans-serif",
             lineHeight: "0.94em",
             letterSpacing: "-0.05em",
-            textShadow: "0px 6px 12px 0px rgba(0, 30, 66, 0.35)",
+            textShadow: "0px 6px 12px 0px rgba(0, 30, 66, 0.6)",
           }}
         >
           The Kardashev Scale

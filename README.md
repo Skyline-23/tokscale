@@ -6,13 +6,13 @@ A high-performance CLI tool and visualization dashboard for tracking AI coding a
 
 **Tokscale** helps you monitor and analyze your token consumption from:
 
-| Platform | Data Location | Supported |
-|----------|---------------|-----------|
-| [OpenCode](https://github.com/sst/opencode) | `~/.local/share/opencode/storage/message/` | Yes |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `~/.claude/projects/` | Yes |
-| [Codex CLI](https://github.com/openai/codex) | `~/.codex/sessions/` | Yes |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `~/.gemini/tmp/*/chats/` | Yes |
-| [Cursor IDE](https://cursor.com/) | API sync via `~/.config/tokscale/cursor-cache/` | Yes |
+| Logo | Platform | Data Location | Supported |
+|------|----------|---------------|-----------|
+| | [OpenCode](https://github.com/sst/opencode) | `~/.local/share/opencode/storage/message/` | Yes |
+| | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `~/.claude/projects/` | Yes |
+| | [Codex CLI](https://github.com/openai/codex) | `~/.codex/sessions/` | Yes |
+| | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `~/.gemini/tmp/*/chats/` | Yes |
+| | [Cursor IDE](https://cursor.com/) | API sync via `~/.config/tokscale/cursor-cache/` | Yes |
 
 Get real-time pricing calculations using [LiteLLM's pricing data](https://github.com/BerriAI/litellm), with support for tiered pricing models and cache token discounts.
 

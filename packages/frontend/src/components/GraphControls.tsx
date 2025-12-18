@@ -3,6 +3,7 @@
 import type { ViewMode, ColorPaletteName, SourceType, GraphColorPalette } from "@/lib/types";
 import { getPaletteNames, colorPalettes } from "@/lib/themes";
 import { SOURCE_DISPLAY_NAMES } from "@/lib/constants";
+import { formatTokenCount } from "@/lib/utils";
 
 interface GraphControlsProps {
   view: ViewMode;
@@ -16,7 +17,7 @@ interface GraphControlsProps {
   availableSources: SourceType[];
   onSourceFilterChange: (sources: SourceType[]) => void;
   palette: GraphColorPalette;
-  totalContributions: number;
+  totalTokens: number;
 }
 
 export function GraphControls({
@@ -31,7 +32,7 @@ export function GraphControls({
   availableSources,
   onSourceFilterChange,
   palette,
-  totalContributions,
+  totalTokens,
 }: GraphControlsProps) {
   const paletteNames = getPaletteNames();
 
@@ -93,8 +94,8 @@ export function GraphControls({
       </div>
 
       <h2 className="text-lg font-medium mb-3" style={{ color: "var(--color-fg-default)" }}>
-        <span className="font-bold" style={{ color: palette.grade4 }}>{totalContributions.toLocaleString()}</span>
-        {" "}token usage entries
+        <span className="font-bold" style={{ color: palette.grade4 }}>{formatTokenCount(totalTokens)}</span>
+        {" "}tokens used
         {selectedYear && (
           <>
             {" "}in{" "}

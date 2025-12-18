@@ -58,7 +58,6 @@ export function GraphContainer({ data }: GraphContainerProps) {
     };
   }, [yearContributions]);
 
-  const totalContributions = useMemo(() => yearContributions.reduce((sum, c) => sum + c.totals.messages, 0), [yearContributions]);
 
   useEffect(() => {
     if (!initializedRef.current && yearContributions.length > 0) {
@@ -101,7 +100,7 @@ export function GraphContainer({ data }: GraphContainerProps) {
             availableSources={availableSources}
             onSourceFilterChange={setSourceFilter}
             palette={palette}
-            totalContributions={totalContributions}
+            totalTokens={totalTokens}
           />
         </div>
 

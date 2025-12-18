@@ -70,14 +70,14 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
         <div className="border-t my-3" style={{ borderColor: "var(--color-border-default)" }} />
 
         <div className="flex justify-between items-center mb-3">
-          <span className="text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>Cost</span>
+          <span className="text-sm font-medium" style={{ color: "var(--color-fg-muted)" }}>Total Tokens</span>
           <span
             className="font-bold text-xl tracking-tight"
             style={{
               color: day.intensity >= 3 ? palette.grade4 : day.intensity >= 2 ? palette.grade3 : "var(--color-fg-default)",
             }}
           >
-            {formatCurrency(totals.cost)}
+            {formatTokenCount(totals.tokens)}
           </span>
         </div>
 
@@ -94,9 +94,9 @@ export function Tooltip({ day, position, visible, palette }: TooltipProps) {
         <div className="border-t my-3" style={{ borderColor: "var(--color-border-default)" }} />
 
         <div className="flex justify-between items-center">
-          <span className="text-sm font-semibold" style={{ color: "var(--color-fg-muted)" }}>Total</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--color-fg-muted)" }}>Cost</span>
           <span className="font-bold" style={{ color: "var(--color-fg-default)" }}>
-            {formatTokenCount(totals.tokens)} tokens
+            {formatCurrency(totals.cost)}
           </span>
         </div>
 

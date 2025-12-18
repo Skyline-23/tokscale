@@ -155,16 +155,16 @@ function recalculateDayTotals(day: DailyContribution): DailyContribution {
 }
 
 export function recalculateIntensity(contributions: DailyContribution[]): DailyContribution[] {
-  const maxCost = Math.max(...contributions.map((c) => c.totals.cost), 0);
+  const maxTokens = Math.max(...contributions.map((c) => c.totals.tokens), 0);
   return contributions.map((c) => ({
     ...c,
-    intensity: calculateIntensity(c.totals.cost, maxCost),
+    intensity: calculateIntensity(c.totals.tokens, maxTokens),
   }));
 }
 
-function calculateIntensity(cost: number, maxCost: number): 0 | 1 | 2 | 3 | 4 {
-  if (cost === 0 || maxCost === 0) return 0;
-  const ratio = cost / maxCost;
+function calculateIntensity(tokens: number, maxTokens: number): 0 | 1 | 2 | 3 | 4 {
+  if (tokens === 0 || maxTokens === 0) return 0;
+  const ratio = tokens / maxTokens;
   if (ratio >= 0.75) return 4;
   if (ratio >= 0.5) return 3;
   if (ratio >= 0.25) return 2;
