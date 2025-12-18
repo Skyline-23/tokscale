@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Avatar, ActionMenu, ActionList, Button } from "@primer/react";
 import { PersonIcon, GearIcon, SignOutIcon } from "@primer/octicons-react";
@@ -41,15 +42,14 @@ export function Navigation() {
         <Link
           href="/"
           className="group hover:opacity-80 transition-opacity"
-          style={{
-            textDecoration: 'none',
-            fontSize: '20px',
-            fontWeight: 700,
-            color: '#53d1f3',
-            letterSpacing: '-0.5px',
-          }}
         >
-          tokscale
+          <Image
+            src="/tokscale-logo.svg"
+            alt="tokscale"
+            width={118}
+            height={25}
+            priority
+          />
         </Link>
 
         <nav aria-label="Main navigation" className="hidden md:flex items-center gap-1">

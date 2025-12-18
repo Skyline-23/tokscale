@@ -4,7 +4,7 @@ import type { ColorPaletteName } from "../config/themes.js";
 import type { TotalBreakdown } from "../hooks/useData.js";
 import { getPalette } from "../config/themes.js";
 import { formatTokens } from "../utils/format.js";
-import { isNarrow, isVeryNarrow } from "../utils/responsive.js";
+import { isVeryNarrow } from "../utils/responsive.js";
 
 interface FooterProps {
   enabledSources: Set<SourceType>;
@@ -40,7 +40,6 @@ function formatTimeAgo(timestamp: number): string {
 
 export function Footer(props: FooterProps) {
   const palette = () => getPalette(props.colorPalette);
-  const isNarrowTerminal = () => isNarrow(props.width);
   const isVeryNarrowTerminal = () => isVeryNarrow(props.width);
   
   const showScrollInfo = () => 
@@ -71,15 +70,9 @@ export function Footer(props: FooterProps) {
           </Show>
         </box>
         <box flexDirection="row" gap={1}>
-          <Show when={!isNarrowTerminal()}>
-            <text dim>In:</text>
-            <text fg="cyan">{formatTokens(totals().input)}</text>
-            <text dim>Out:</text>
-            <text fg="cyan">{formatTokens(totals().output)}</text>
-            <text dim>Cache:</text>
-            <text fg="cyan">{formatTokens(totals().cacheRead + totals().cacheWrite)}</text>
-            <text dim>|</text>
-          </Show>
+          <text fg="cyan">{formatTokens(totals().total)}</text>
+          <text dim>tokens</text>
+          <text dim>|</text>
           <text fg="green" bold>{`$${totals().cost.toFixed(2)}`}</text>
           <Show when={!isVeryNarrowTerminal()}>
             <text dim>({props.modelCount} models)</text>
