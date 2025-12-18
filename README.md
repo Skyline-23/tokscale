@@ -1,18 +1,39 @@
-# Tokscale
+<!-- <CENTERED SECTION FOR GITHUB DISPLAY> -->
 
-A high-performance CLI tool and visualization dashboard for tracking AI coding assistant token usage and costs across multiple platforms.
+<div align="center">
+
+[![Tokscale](./.github/assets/hero.png)](https://github.com/junhoyeo/tokscale#tokscale)
+
+</div>
+
+> A high-performance CLI tool and visualization dashboard for tracking AI coding assistant token usage and costs across multiple platforms.
+
+<div align="center">
+
+[![GitHub Release](https://img.shields.io/github/v/release/junhoyeo/tokscale?color=0073FF&labelColor=black&logo=github&style=flat-square)](https://github.com/junhoyeo/tokscale/releases)
+[![GitHub Contributors](https://img.shields.io/github/contributors/junhoyeo/tokscale?color=0073FF&labelColor=black&style=flat-square)](https://github.com/junhoyeo/tokscale/graphs/contributors)
+[![GitHub Forks](https://img.shields.io/github/forks/junhoyeo/tokscale?color=0073FF&labelColor=black&style=flat-square)](https://github.com/junhoyeo/tokscale/network/members)
+[![GitHub Stars](https://img.shields.io/github/stars/junhoyeo/tokscale?color=0073FF&labelColor=black&style=flat-square)](https://github.com/junhoyeo/tokscale/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/junhoyeo/tokscale?color=0073FF&labelColor=black&style=flat-square)](https://github.com/junhoyeo/tokscale/issues)
+[![License](https://img.shields.io/badge/license-MIT-white?labelColor=black&style=flat-square)](https://github.com/junhoyeo/tokscale/blob/master/LICENSE)
+
+[English](README.md)
+
+</div>
+
+<!-- </CENTERED SECTION FOR GITHUB DISPLAY> -->
 
 ## Overview
 
 **Tokscale** helps you monitor and analyze your token consumption from:
 
-| Logo | Platform | Data Location | Supported |
+| Logo | Client | Data Location | Supported |
 |------|----------|---------------|-----------|
-| | [OpenCode](https://github.com/sst/opencode) | `~/.local/share/opencode/storage/message/` | Yes |
-| | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `~/.claude/projects/` | Yes |
-| | [Codex CLI](https://github.com/openai/codex) | `~/.codex/sessions/` | Yes |
-| | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `~/.gemini/tmp/*/chats/` | Yes |
-| | [Cursor IDE](https://cursor.com/) | API sync via `~/.config/tokscale/cursor-cache/` | Yes |
+| <img width="48px" src=".github/assets/client-opencode.png" alt="OpenCode" /> | [OpenCode](https://github.com/sst/opencode) | `~/.local/share/opencode/storage/message/` | Yes |
+| <img width="48px" src=".github/assets/client-claude.jpg" alt="Claude" /> | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `~/.claude/projects/` | Yes |
+| <img width="48px" src=".github/assets/client-openai.jpg" alt="Codex" /> | [Codex CLI](https://github.com/openai/codex) | `~/.codex/sessions/` | Yes |
+| <img width="48px" src=".github/assets/client-gemini.png" alt="Gemini" /> | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `~/.gemini/tmp/*/chats/` | Yes |
+| <img width="48px" src=".github/assets/client-cursor.jpg" alt="Cursor" /> | [Cursor IDE](https://cursor.com/) | API sync via `~/.config/tokscale/cursor-cache/` | Yes |
 
 Get real-time pricing calculations using [LiteLLM's pricing data](https://github.com/BerriAI/litellm), with support for tiered pricing models and cache token discounts.
 
