@@ -65,6 +65,18 @@ Get real-time pricing calculations using [🚅 LiteLLM's pricing data](https://g
 ### Quick Start
 
 ```bash
+# Install globally via npm
+npm install -g tokscale
+
+# Run the CLI
+tokscale
+```
+
+### Development Setup
+
+For local development or building from source:
+
+```bash
 # Clone the repository
 git clone https://github.com/junhoyeo/tokscale.git
 cd tokscale
@@ -75,16 +87,18 @@ curl -fsSL https://bun.sh/install | bash
 # Install dependencies
 bun install
 
-# Run the CLI
+# Run the CLI in development mode
 bun run cli
 ```
+
+> **Note**: `bun run cli` is for local development. When installed globally via npm, the command is `tokscale`. The Usage section below shows the installed binary commands.
 
 ### Building the Native Module (Optional)
 
 The native Rust module provides ~10x faster processing through parallel file scanning and SIMD JSON parsing:
 
 ```bash
-# Build the native core
+# Build the native core (run from repository root)
 bun run build:core
 
 # Verify installation
@@ -101,7 +115,7 @@ tokscale
 
 # Launch TUI with specific tab
 tokscale models    # Models tab
-tokscale monthly   # Daily tab
+tokscale monthly   # Daily view (shows daily breakdown)
 
 # Use legacy CLI table output
 tokscale --light
@@ -112,6 +126,12 @@ tokscale tui
 
 # Export contribution graph data as JSON
 tokscale graph --output data.json
+
+# Output data as JSON (for scripting/automation)
+tokscale --json                    # Default models view as JSON
+tokscale models --json             # Models breakdown as JSON
+tokscale monthly --json            # Monthly breakdown as JSON
+tokscale models --json > report.json   # Save to file
 ```
 
 ### TUI Features
@@ -147,9 +167,35 @@ tokscale --codex
 # Show only Gemini CLI usage
 tokscale --gemini
 
+# Show only Cursor IDE usage (requires `tokscale cursor login` first)
+tokscale --cursor
+
 # Combine filters
 tokscale --opencode --claude
 ```
+
+### Date Filtering
+
+Date filters work across all commands that generate reports (`tokscale`, `tokscale models`, `tokscale monthly`, `tokscale graph`):
+
+```bash
+# Quick date shortcuts
+tokscale --today              # Today only
+tokscale --week               # Last 7 days
+tokscale --month              # Current calendar month
+
+# Custom date range (inclusive, local timezone)
+tokscale --since 2024-01-01 --until 2024-12-31
+
+# Filter by year
+tokscale --year 2024
+
+# Combine with other options
+tokscale models --week --claude --json
+tokscale monthly --month --benchmark
+```
+
+> **Note**: Date filters use your local timezone. Both `--since` and `--until` are inclusive.
 
 ### Graph Command Options
 
@@ -157,10 +203,10 @@ tokscale --opencode --claude
 # Export graph data to file
 tokscale graph --output usage-data.json
 
-# Filter by date range
+# Date filtering (all shortcuts work)
+tokscale graph --today
+tokscale graph --week
 tokscale graph --since 2024-01-01 --until 2024-12-31
-
-# Filter by year
 tokscale graph --year 2024
 
 # Filter by platform
@@ -168,6 +214,17 @@ tokscale graph --opencode --claude
 
 # Show processing time benchmark
 tokscale graph --output data.json --benchmark
+```
+
+### Benchmark Flag
+
+Show processing time for performance analysis:
+
+```bash
+tokscale --benchmark           # Show processing time with default view
+tokscale models --benchmark    # Benchmark models report
+tokscale monthly --benchmark   # Benchmark monthly report
+tokscale graph --benchmark     # Benchmark graph generation
 ```
 
 ### Social Platform Commands
@@ -191,6 +248,31 @@ tokscale submit --dry-run
 # Logout
 tokscale logout
 ```
+
+### Cursor IDE Commands
+
+Cursor IDE requires separate authentication via session token (different from the social platform login):
+
+```bash
+# Login to Cursor (requires session token from browser)
+tokscale cursor login
+
+# Check Cursor authentication status and session validity
+tokscale cursor status
+
+# Logout from Cursor (removes saved credentials)
+tokscale cursor logout
+```
+
+**Credentials storage**: Cursor session token is saved to `~/.config/tokscale/cursor-credentials.json`. Usage data is cached at `~/.config/tokscale/cursor-cache/`.
+
+**To get your Cursor session token:**
+1. Open https://www.cursor.com/settings in your browser
+2. Open Developer Tools (F12)
+3. **Option A - Network tab**: Make any action on the page, find a request to `cursor.com/api/*`, look in the Request Headers for the `Cookie` header, and copy only the value after `WorkosCursorSessionToken=`
+4. **Option B - Application tab**: Go to Application → Cookies → `https://www.cursor.com`, find the `WorkosCursorSessionToken` cookie, and copy its value (not the cookie name)
+
+> ⚠️ **Security Warning**: Treat your session token like a password. Never share it publicly or commit it to version control. The token grants full access to your Cursor account.
 
 ### Example Output (`--light` version)
 
@@ -223,9 +305,11 @@ tokscale/
 │   │   │   ├── hooks/      # Data fetching & state
 │   │   │   ├── config/     # Themes & settings
 │   │   │   └── utils/      # Formatting utilities
-│   │   ├── opencode.ts     # OpenCode session parser
-│   │   ├── claudecode.ts   # Claude Code & Codex parser
-│   │   ├── gemini.ts       # Gemini CLI parser
+│   │   ├── sessions/       # Platform session parsers
+│   │   │   ├── claudecode.ts  # Claude Code parser
+│   │   │   ├── codex.ts       # Codex CLI parser
+│   │   │   ├── gemini.ts      # Gemini CLI parser
+│   │   │   └── opencode.ts    # OpenCode parser
 │   │   ├── cursor.ts       # Cursor IDE integration
 │   │   ├── graph.ts        # Graph data generation
 │   │   ├── pricing.ts      # LiteLLM pricing fetcher
@@ -277,7 +361,7 @@ Tokscale uses a hybrid architecture for optimal performance:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-All heavy computation is done in Rust. The CLI requires the native module to run.
+All heavy computation is done in Rust when the native module is available. When the native module is not installed, the CLI automatically falls back to TypeScript implementations for full compatibility (with slower performance).
 
 ### Key Technologies
 
@@ -332,14 +416,14 @@ The frontend provides a GitHub-style contribution graph visualization:
 ### Features
 
 - **2D View**: Classic GitHub contribution calendar
-- **3D View**: Isometric 3D contribution graph with height based on cost
+- **3D View**: Isometric 3D contribution graph with height based on token usage
 - **Multiple color palettes**: GitHub, GitLab, Halloween, Winter, and more
 - **3-way theme toggle**: Light / Dark / System (follows OS preference)
 - **GitHub Primer design**: Uses GitHub's official color system
 - **Interactive tooltips**: Hover for detailed daily breakdowns
 - **Day breakdown panel**: Click to see per-source and per-model details
 - **Year filtering**: Navigate between years
-- **Source filtering**: Filter by platform (OpenCode, Claude, Codex, Gemini)
+- **Source filtering**: Filter by platform (OpenCode, Claude, Codex, Cursor, Gemini)
 - **Stats panel**: Total cost, tokens, active days, streaks
 - **FOUC prevention**: Theme applied before React hydrates (no flash)
 
@@ -403,6 +487,8 @@ tokscale graph --output packages/frontend/public/my-data.json
 
 ## Development
 
+> **Quick setup**: If you just want to get started quickly, see [Development Setup](#development-setup) in the Installation section above.
+
 ### Prerequisites
 
 ```bash
@@ -414,15 +500,11 @@ rustc --version
 cargo --version
 ```
 
-### Setup
+### Advanced Development
+
+After following the [Development Setup](#development-setup), you can:
 
 ```bash
-# Install Bun (if not already installed)
-curl -fsSL https://bun.sh/install | bash
-
-# Install dependencies
-bun install
-
 # Build native module (optional but recommended)
 bun run build:core
 
@@ -612,6 +694,12 @@ Session files containing message arrays:
   ]
 }
 ```
+
+### Cursor IDE
+
+Location: `~/.config/tokscale/cursor-cache/` (synced via Cursor API)
+
+Cursor data is fetched from the Cursor API using your session token and cached locally. Run `tokscale cursor login` to authenticate. See [Cursor IDE Commands](#cursor-ide-commands) for setup instructions.
 
 ## Pricing
 
