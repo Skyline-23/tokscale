@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import heroBg from "@/../public/assets/hero-bg.png";
 
 export function BlackholeHero() {
   const [copied, setCopied] = useState(false);
@@ -23,13 +24,15 @@ export function BlackholeHero() {
         borderRight: "1px solid rgba(105, 105, 105, 0.4)",
       }}
     >
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 bg-black">
         <Image
-          src="/assets/hero-bg.png"
-          alt="Hero Background"
+          src={heroBg}
+          alt=""
           fill
           className="object-cover"
           priority
+          quality={100}
+          placeholder="blur"
         />
       </div>
 

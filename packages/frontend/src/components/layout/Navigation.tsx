@@ -35,10 +35,17 @@ export function Navigation() {
 
   return (
     <header
-      className="sticky top-0 z-50 border-b backdrop-blur-xl"
-      style={{ borderColor: "var(--color-border-default)", backgroundColor: "color-mix(in srgb, var(--color-bg-default) 80%, transparent)" }}
+      className="sticky top-0 z-50 border-b backdrop-blur-xl flex items-center justify-center"
+      style={{
+        width: '100%',
+        borderColor: "var(--color-border-default)",
+        backgroundColor: "color-mix(in srgb, var(--color-bg-default) 80%, transparent)" ,
+        height: '72px',
+        maxHeight: '72px',
+        overflow: 'hidden'
+      }}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link
           href="/"
           className="group hover:opacity-80 transition-opacity"
@@ -70,19 +77,24 @@ export function Navigation() {
           {isLoading ? (
             <div
               className="w-9 h-9 rounded-full animate-pulse"
-              style={{ backgroundColor: "var(--color-bg-subtle)" }}
+              style={{
+                backgroundColor: "var(--color-bg-subtle)",
+                width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px',
+              }}
             />
           ) : user ? (
             <ActionMenu>
               <ActionMenu.Anchor>
                 <button
                   aria-label={`User menu for ${user.username}`}
-                  className="flex items-center gap-2 p-1 rounded-full transition-colors hover:opacity-80"
+                  className="flex items-center gap-2 rounded-full transition-colors hover:opacity-80"
+                  style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px' }}
                 >
                   <Avatar
                     src={user.avatarUrl || `https://github.com/${user.username}.png`}
                     alt={user.username}
-                    size={36}
+                    size={128}
+                    style={{ width: '100%', height: '100%' }}
                   />
                 </button>
               </ActionMenu.Anchor>
