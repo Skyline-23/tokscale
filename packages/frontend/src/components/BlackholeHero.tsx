@@ -1,123 +1,160 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
-
-const BlackholeBackground = dynamic(
-  () => import("@junhoyeo/blackhole").then((mod) => mod.BlackholeBackground),
-  { ssr: false }
-);
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import heroBg from "@/../public/assets/hero-bg.png";
 
 export function BlackholeHero() {
-  const [key, setKey] = useState(0);
-  const [isReady, setIsReady] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setIsReady(false);
-        setKey((k) => k + 1);
-      }, 150);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const handleTexturesLoaded = useCallback(() => {
-    setIsReady(true);
-  }, []);
+  const handleCopy = () => {
+    navigator.clipboard.writeText("npx tokscale");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div
-      className="relative w-full max-w-7xl mx-auto mb-10 overflow-hidden rounded-2xl"
+    <div 
+      className="relative w-full max-w-7xl mx-auto mb-10 overflow-hidden h-[424px]"
       style={{
-        height: "420px",
-        backgroundColor: "#000",
+        borderRadius: "0px 0px 20px 20px",
+        borderBottom: "1px solid rgba(105, 105, 105, 0.4)",
+        borderLeft: "1px solid rgba(105, 105, 105, 0.4)",
+        borderRight: "1px solid rgba(105, 105, 105, 0.4)",
       }}
     >
-      <motion.div
-        className="absolute"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isReady ? 1 : 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        style={{
-          width: "max(100%, 900px)",
-          height: "100%",
-          left: "50%",
-          top: 0,
-          transform: "translateX(-50%)",
-          zIndex: 0,
-        }}
-      >
-        <BlackholeBackground
-          key={key}
-          quality="high"
-          cameraDistance={10}
-          fieldOfView={90}
-          enableOrbit={true}
-          showAccretionDisk={true}
-          useDiskTexture={true}
-          enableLorentzTransform={true}
-          enableDopplerShift={true}
-          enableBeaming={true}
-          bloomStrength={0.5}
-          bloomRadius={0.3}
-          bloomThreshold={0.8}
-          backgroundTextureUrl="/assets/milkyway.jpg"
-          starTextureUrl="/assets/star_noise.png"
-          diskTextureUrl="/assets/accretion_disk.png"
-          onTexturesLoaded={handleTexturesLoaded}
+      <div className="absolute inset-0 z-0 bg-black">
+        <Image
+          src={heroBg}
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          quality={100}
+          placeholder="blur"
         />
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isReady ? 1 : 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%)",
-          zIndex: 2,
-        }}
-      >
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 20 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3"
+      <div className="relative z-10 w-full h-full flex flex-col items-center pt-[53px] gap-[39px]">
+        <div className="relative w-[173px] h-[36px] shrink-0">
+          <Image
+            src="/assets/hero-logo.svg"
+            alt="Tokscale Logo"
+            fill
+            className="object-contain"
+          />
+        </div>
+
+        <h1
+          className="text-[48px] font-bold text-white text-center"
           style={{
-            color: "#FFFFFF",
-            textShadow: "0 2px 20px rgba(0,0,0,0.8)",
-            letterSpacing: "-0.03em",
+            fontFamily: "Figtree, var(--font-geist-sans), sans-serif",
+            lineHeight: "0.94em",
+            letterSpacing: "-0.05em",
+            textShadow: "0px 6px 12px 0px rgba(0, 30, 66, 0.35)",
           }}
         >
-          The Kardashev Scale of AI Devs
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 20 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="text-lg md:text-xl max-w-md px-4"
-          style={{ color: "rgba(255,255,255,0.8)", textShadow: "0 1px 10px rgba(0,0,0,0.8)" }}
-        >
-          Track your AI token usage across all platforms
-        </motion.p>
-      </motion.div>
+          The Kardashev Scale
+          <br />
+          for AI Devs
+        </h1>
 
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: "100px",
-          background: "linear-gradient(to bottom, rgba(20, 20, 21, 0) 0%, rgba(20, 20, 21, 1) 100%)",
-          zIndex: 1,
-        }}
-      />
+        <div
+          className="flex items-center gap-[6px] p-[8px] rounded-xl border backdrop-blur-sm"
+          style={{
+            backgroundColor: "#141415",
+            borderColor: "rgba(49, 56, 65, 0.4)",
+          }}
+        >
+          <button
+            onClick={handleCopy}
+            className="flex items-center justify-center rounded-lg transition-all hover:opacity-90 active:scale-95 shrink-0"
+            style={{
+              backgroundColor: "#0073FF",
+              height: "36px",
+              width: "86px",
+            }}
+          >
+            <span className="text-[15px] font-bold text-white leading-none tracking-tight">
+              {copied ? "Copied" : "Copy"}
+            </span>
+          </button>
+          
+          <div 
+            className="flex items-center relative overflow-hidden h-[36px] bg-[#1A1B1C] rounded-lg shrink-0 px-3"
+            style={{ width: "190px" }}
+          >
+            <div className="z-10 flex items-center">
+              <span
+                style={{
+                  color: "#FFF",
+                  fontFamily: "Inconsolata, monospace",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  lineHeight: "94%",
+                  letterSpacing: "-0.8px",
+                }}
+              >
+                npx&nbsp;
+              </span>
+              <span
+                style={{
+                  background: "linear-gradient(90deg, #0CF 0%, #0073FF 100%)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  fontFamily: "Inconsolata, monospace",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                  lineHeight: "94%",
+                  letterSpacing: "-0.8px",
+                }}
+              >
+                tokscale
+              </span>
+            </div>
+            <div 
+              className="ml-[10px] shrink-0"
+              style={{
+                width: "25px",
+                height: "36px",
+                background: "linear-gradient(270deg, rgba(26, 27, 28, 0) 0%, rgba(1, 127, 255, 0.14) 50%, rgba(26, 27, 28, 0) 100%)"
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-[4px]">
+          <div className="flex items-center gap-[6px]">
+            <Image 
+              src="/assets/github-icon.svg" 
+              alt="GitHub Star" 
+              width={24} 
+              height={24}
+              className="block"
+            />
+            <span
+              className="text-[18px] font-bold text-white"
+              style={{ fontFamily: "Figtree, var(--font-geist-sans), sans-serif" }}
+            >
+              Star me on GitHub!
+            </span>
+          </div>
+          <Link
+            href="https://github.com/junhoyeo/tokscale"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[16px] font-semibold transition-colors hover:text-white"
+            style={{
+              color: "#696969",
+              fontFamily: "Figtree, var(--font-geist-sans), sans-serif"
+            }}
+          >
+            junhoyeo/tokscale
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
