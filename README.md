@@ -37,6 +37,12 @@
 
 Get real-time pricing calculations using [🚅 LiteLLM's pricing data](https://github.com/BerriAI/litellm), with support for tiered pricing models and cache token discounts.
 
+### Why "Tokscale"?
+
+The name is inspired by the **[Kardashev scale](https://en.wikipedia.org/wiki/Kardashev_scale)**, a method proposed by astrophysicist Nikolai Kardashev to measure a civilization's level of technological advancement based on its energy consumption. A Type I civilization harnesses all energy available on its planet, Type II captures the entire output of its star, and Type III commands the energy of an entire galaxy.
+
+In the age of AI-assisted development, **tokens are the new energy**. They power our reasoning, fuel our productivity, and drive our creative output. Just as the Kardashev scale tracks energy consumption at cosmic scales, Tokscale measures your token consumption as you scale the ranks of AI-augmented development. Whether you're a casual user or burning through millions of tokens daily, Tokscale helps you visualize your journey up the scale—from planetary developer to galactic code architect.
+
 ## Features
 
 - **Interactive TUI Mode** - Beautiful terminal UI powered by OpenTUI (default mode)
@@ -56,34 +62,47 @@ Get real-time pricing calculations using [🚅 LiteLLM's pricing data](https://g
 
 ## Installation
 
-### Prerequisites
-
-- Node.js 18+ (for `--light` mode and non-TUI commands)
-- [Bun](https://bun.sh/) (required for interactive TUI mode)
-- (Optional) Rust toolchain for building native module from source
-
 ### Quick Start
 
 ```bash
 # Run directly with bunx (recommended - full TUI support)
 bunx tokscale
+```
 
-# Or with npx (TUI falls back to light mode)
+That's it! This gives you the full interactive TUI experience with zero setup.
+
+> **Why Bun?** The interactive TUI requires [Bun](https://bun.sh/) runtime due to OpenTUI's native Zig modules for zero-flicker rendering.
+
+<details>
+<summary><b>Alternative: npm/npx Installation</b></summary>
+
+If you prefer npm or don't have Bun installed:
+
+```bash
+# Run with npx (TUI falls back to light mode)
 npx tokscale
 
-# Or install globally via npm
+# Or install globally
 npm install -g tokscale
 
-# Or use the scoped package name (same thing)
+# Or use the scoped package name
 npm install -g @tokscale/cli
 
-# Run the CLI
+# Then run
 tokscale
 ```
 
-> **Runtime Note**: The interactive TUI requires [Bun](https://bun.sh/) runtime due to OpenTUI's native Zig modules. When using `npx` (Node.js), TUI commands automatically fall back to `--light` mode (legacy CLI tables). Use `bunx` for the full TUI experience.
+> **Note**: When using `npx` or Node.js runtime, TUI commands automatically fall back to `--light` mode (legacy CLI tables). For the full TUI experience, use `bunx`.
 
-> **Package Structure**: `tokscale` is an alias package (like [`swc`](https://www.npmjs.com/package/swc)) that installs `@tokscale/cli`. Both commands install the same CLI tool with the native Rust core (`@tokscale/core`) included as a dependency—similar to SWC's package structure.
+> **Package Structure**: `tokscale` is an alias package (like [`swc`](https://www.npmjs.com/package/swc)) that installs `@tokscale/cli`. Both install the same CLI with the native Rust core (`@tokscale/core`) included.
+
+</details>
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (recommended for full TUI support)
+- Node.js 18+ (for `--light` mode and non-TUI commands)
+- (Optional) Rust toolchain for building native module from source
 
 ### Development Setup
 
