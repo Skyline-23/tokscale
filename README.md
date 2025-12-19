@@ -303,6 +303,25 @@ tokscale cursor logout
   Total: 156 messages, 5,286,526 tokens, $69.12
 ```
 
+### Environment Variables
+
+For advanced users with large datasets or specific requirements:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TOKSCALE_NATIVE_TIMEOUT_MS` | `300000` (5 min) | Maximum time for native subprocess processing |
+| `TOKSCALE_MAX_OUTPUT_BYTES` | `52428800` (50MB) | Maximum output size from native subprocess |
+
+```bash
+# Example: Increase timeout for very large datasets
+TOKSCALE_NATIVE_TIMEOUT_MS=600000 tokscale graph --output data.json
+
+# Example: Increase output limit for power users with years of data
+TOKSCALE_MAX_OUTPUT_BYTES=104857600 tokscale --json > report.json
+```
+
+> **Note**: These limits are safety measures to prevent hangs and memory issues. Most users won't need to change them.
+
 ## Architecture
 
 ```
