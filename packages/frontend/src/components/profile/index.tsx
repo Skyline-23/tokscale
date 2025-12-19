@@ -104,6 +104,7 @@ export function ProfileHeader({ user, stats, lastUpdated }: ProfileHeaderProps) 
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                textDecoration: "none",
               }}
               title={stats.totalTokens.toLocaleString()}
             >
@@ -120,7 +121,7 @@ export function ProfileHeader({ user, stats, lastUpdated }: ProfileHeaderProps) 
             </span>
             <span
               className="text-[27px] font-bold leading-none"
-              style={{ color: "var(--color-fg-default)" }}
+              style={{ color: "var(--color-fg-default)", textDecoration: "none" }}
               title={stats.totalCost.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
             >
               {formatCurrency(stats.totalCost)}

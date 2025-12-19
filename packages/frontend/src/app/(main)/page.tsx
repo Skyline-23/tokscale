@@ -86,7 +86,7 @@ export default function LeaderboardPage() {
               </p>
               <p
                 className="text-xl sm:text-2xl font-bold"
-                style={{ color: "var(--color-primary)" }}
+                style={{ color: "var(--color-primary)", textDecoration: "none" }}
                 title={data ? data.stats.totalTokens.toLocaleString() : undefined}
               >
                 {data ? formatNumber(data.stats.totalTokens) : "-"}
@@ -101,7 +101,7 @@ export default function LeaderboardPage() {
               </p>
               <p
                 className="text-xl sm:text-2xl font-bold"
-                style={{ color: "var(--color-fg-default)" }}
+                style={{ color: "var(--color-fg-default)", textDecoration: "none" }}
                 title={data ? data.stats.totalCost.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }) : undefined}
               >
                 {data ? formatCurrency(data.stats.totalCost) : "-"}
@@ -265,7 +265,7 @@ export default function LeaderboardPage() {
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                             <span
                               className="font-medium text-sm sm:text-base"
-                              style={{ color: "var(--color-fg-default)" }}
+                              style={{ color: "var(--color-fg-default)", textDecoration: "none" }}
                               title={user.totalCost.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })}
                             >
                               {formatCurrency(user.totalCost)}
@@ -274,7 +274,7 @@ export default function LeaderboardPage() {
                           <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                             <span
                               className="font-medium text-sm sm:text-base"
-                              style={{ color: "var(--color-primary)" }}
+                              style={{ color: "var(--color-primary)", textDecoration: "none" }}
                               title={user.totalTokens.toLocaleString()}
                             >
                               {formatNumber(user.totalTokens)}
