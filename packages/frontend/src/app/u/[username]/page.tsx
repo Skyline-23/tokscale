@@ -4,16 +4,27 @@ import ProfilePageClient from './ProfilePageClient';
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   const { username } = await params;
   return {
-    title: `@${username} - Token Usage`,
-    description: `View ${username}'s AI token usage statistics and cost breakdown`,
+    title: `@${username} - Token Usage | Tokscale`,
+    description: `View ${username}'s AI token usage statistics and cost breakdown on Tokscale`,
     openGraph: {
-      title: `@${username}'s Token Usage`,
-      description: `AI token usage statistics for ${username}`,
+      title: `@${username}'s Token Usage | Tokscale`,
+      description: `AI token usage statistics for ${username} on Tokscale`,
       type: 'profile',
+      url: `https://tokscale.ai/u/${username}`,
+      siteName: 'Tokscale',
+      images: [
+        {
+          url: '/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: `${username}'s Token Usage on Tokscale`,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
-      title: `@${username}'s Token Usage`,
+      card: 'summary_large_image',
+      title: `@${username}'s Token Usage | Tokscale`,
+      images: ['/og-image.png'],
     },
   };
 }

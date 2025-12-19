@@ -16,17 +16,29 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Token Usage Leaderboard",
-  description: "The Kardashev Scale for AI Devs",
+  title: "Tokscale - AI Token Usage Tracker & Leaderboard",
+  description: "Track, visualize, and compete on AI coding assistant token usage across Claude Code, Cursor, OpenCode, Codex, and Gemini. The Kardashev Scale for AI Devs.",
+  metadataBase: new URL("https://tokscale.ai"),
   openGraph: {
-    title: "Token Usage Leaderboard",
-    description: "The Kardashev Scale for AI Devs",
+    title: "Tokscale - AI Token Usage Tracker & Leaderboard",
+    description: "Track, visualize, and compete on AI coding assistant token usage across Claude Code, Cursor, OpenCode, Codex, and Gemini. The Kardashev Scale for AI Devs.",
     type: "website",
+    url: "https://tokscale.ai",
+    siteName: "Tokscale",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Tokscale - AI Token Usage Tracker",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Token Usage Leaderboard",
-    description: "The Kardashev Scale for AI Devs",
+    title: "Tokscale - AI Token Usage Tracker & Leaderboard",
+    description: "Track, visualize, and compete on AI coding assistant token usage across Claude Code, Cursor, OpenCode, Codex, and Gemini.",
+    images: ["/og-image.png"],
   },
 };
 
