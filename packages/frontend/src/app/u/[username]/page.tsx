@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
       siteName: 'Tokscale',
       images: [
         {
-          url: '/og-image.png',
+          url: 'https://tokscale.ai/og-image.png',
           width: 1200,
           height: 630,
           alt: `${username}'s Token Usage on Tokscale`,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     twitter: {
       card: 'summary_large_image',
       title: `@${username}'s Token Usage | Tokscale`,
-      images: ['/og-image.png'],
+      images: ['https://tokscale.ai/og-image.png'],
     },
   };
 }

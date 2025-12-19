@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: "Tokscale",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://tokscale.ai/og-image.png",
         width: 1200,
         height: 630,
         alt: "Tokscale - AI Token Usage Tracker",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tokscale - AI Token Usage Tracker & Leaderboard",
     description: "Track, visualize, and compete on AI coding assistant token usage across Claude Code, Cursor, OpenCode, Codex, and Gemini.",
-    images: ["/og-image.png"],
+    images: ["https://tokscale.ai/og-image.png"],
   },
 };
 
