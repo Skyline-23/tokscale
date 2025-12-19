@@ -45,6 +45,35 @@ import { performance } from "node:perf_hooks";
 import type { SourceType } from "./graph-types.js";
 import type { TUIOptions, TabType } from "./tui/types/index.js";
 
+type LaunchTUIFunction = (options?: TUIOptions) => Promise<void>;
+
+let cachedTUILoader: LaunchTUIFunction | null = null;
+let tuiLoadAttempted = false;
+
+async function tryLoadTUI(): Promise<LaunchTUIFunction | null> {
+  if (tuiLoadAttempted) return cachedTUILoader;
+  tuiLoadAttempted = true;
+  
+  try {
+    const tuiModule = await import("./tui/index.js");
+    cachedTUILoader = tuiModule.launchTUI;
+    return cachedTUILoader;
+  } catch {
+    return null;
+  }
+}
+
+function showTUIUnavailableMessage(): void {
+  console.log(pc.yellow("\n  TUI mode requires Bun runtime."));
+  console.log(pc.gray("  OpenTUI's native modules are not compatible with Node.js."));
+  console.log();
+  console.log(pc.white("  Options:"));
+  console.log(pc.gray("  • Use 'bunx tokscale' instead of 'npx tokscale'"));
+  console.log(pc.gray("  • Use '--light' flag for legacy CLI table output"));
+  console.log(pc.gray("  • Use '--json' flag for JSON output"));
+  console.log();
+}
+
 interface FilterOptions {
   opencode?: boolean;
   claude?: boolean;
@@ -175,8 +204,13 @@ async function main() {
       } else if (options.light) {
         await showMonthlyReport(options);
       } else {
-        const { launchTUI } = await import("./tui/index.js");
-        await launchTUI(buildTUIOptions(options, "daily"));
+        const launchTUI = await tryLoadTUI();
+        if (launchTUI) {
+          await launchTUI(buildTUIOptions(options, "daily"));
+        } else {
+          showTUIUnavailableMessage();
+          await showMonthlyReport(options);
+        }
       }
     });
 
@@ -203,8 +237,13 @@ async function main() {
       } else if (options.light) {
         await showModelReport(options);
       } else {
-        const { launchTUI } = await import("./tui/index.js");
-        await launchTUI(buildTUIOptions(options, "model"));
+        const launchTUI = await tryLoadTUI();
+        if (launchTUI) {
+          await launchTUI(buildTUIOptions(options, "model"));
+        } else {
+          showTUIUnavailableMessage();
+          await showModelReport(options);
+        }
       }
     });
 
@@ -302,8 +341,13 @@ async function main() {
     .option("--until <date>", "End date (YYYY-MM-DD)")
     .option("--year <year>", "Filter to specific year")
     .action(async (options) => {
-      const { launchTUI } = await import("./tui/index.js");
-      await launchTUI(buildTUIOptions(options));
+      const launchTUI = await tryLoadTUI();
+      if (launchTUI) {
+        await launchTUI(buildTUIOptions(options));
+      } else {
+        showTUIUnavailableMessage();
+        process.exit(1);
+      }
     });
 
   // =========================================================================
@@ -373,8 +417,13 @@ async function main() {
     } else if (opts.light) {
       await showModelReport(opts);
     } else {
-      const { launchTUI } = await import("./tui/index.js");
-      await launchTUI(buildTUIOptions(opts));
+      const launchTUI = await tryLoadTUI();
+      if (launchTUI) {
+        await launchTUI(buildTUIOptions(opts));
+      } else {
+        showTUIUnavailableMessage();
+        await showModelReport(opts);
+      }
     }
   }
 }
