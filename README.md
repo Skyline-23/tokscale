@@ -65,7 +65,13 @@ Get real-time pricing calculations using [🚅 LiteLLM's pricing data](https://g
 ### Quick Start
 
 ```bash
-# Install globally via npm
+# Run directly with bunx (no install required)
+bunx tokscale
+
+# Or with npx
+npx tokscale
+
+# Or install globally via npm
 npm install -g tokscale
 
 # Or use the scoped package name (same thing)

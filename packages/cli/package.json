@@ -1,7 +1,7 @@
 {
   "name": "@tokscale/cli",
   "version": "1.0.1",
-  "description": "Calculate token prices from OpenCode, Claude Code, Codex, Gemini, and Cursor sessions",
+  "description": "A high-performance CLI tool and visualization dashboard for tracking AI coding assistant token usage and costs across multiple platforms.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/cli.js",
