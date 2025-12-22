@@ -63,6 +63,8 @@ export function mergeSourceBreakdowns(
   for (const sourceName of incomingSources) {
     if (incoming[sourceName]) {
       merged[sourceName] = { ...incoming[sourceName] };
+    } else {
+      delete merged[sourceName];
     }
   }
 

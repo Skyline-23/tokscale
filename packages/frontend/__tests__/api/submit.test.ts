@@ -115,31 +115,30 @@ describe('POST /api/submit - Source-Level Merge', () => {
   });
 
   describe('Source-Level Merge Logic', () => {
-    it('should preserve existing sources when submitting partial data', () => {
-      // Scenario: User had claude + cursor, now only submits claude (cursor cleaned up)
+    it('should preserve sources NOT in submission but delete sources with no day activity', () => {
       const existingSourceBreakdown = {
         claude: { tokens: 1000, cost: 10, modelId: 'claude-sonnet-4', input: 600, output: 400, cacheRead: 0, cacheWrite: 0, messages: 5 },
         cursor: { tokens: 500, cost: 5, modelId: 'cursor-small', input: 300, output: 200, cacheRead: 0, cacheWrite: 0, messages: 3 },
+        codex: { tokens: 200, cost: 2, modelId: 'gpt-4', input: 100, output: 100, cacheRead: 0, cacheWrite: 0, messages: 1 },
       };
       
-      const incomingSources = new Set(['claude']); // Only claude in new submission
+      const incomingSources = new Set(['claude', 'cursor']);
       const incomingSourceBreakdown = {
         claude: { tokens: 1200, cost: 12, modelId: 'claude-sonnet-4', input: 700, output: 500, cacheRead: 0, cacheWrite: 0, messages: 6 },
       };
       
-      // Simulate merge logic
-      const merged = { ...existingSourceBreakdown };
+      const merged = { ...existingSourceBreakdown } as Record<string, typeof existingSourceBreakdown.claude>;
       for (const sourceName of incomingSources) {
         if (incomingSourceBreakdown[sourceName as keyof typeof incomingSourceBreakdown]) {
-          merged[sourceName as keyof typeof merged] = incomingSourceBreakdown[sourceName as keyof typeof incomingSourceBreakdown];
+          merged[sourceName] = incomingSourceBreakdown[sourceName as keyof typeof incomingSourceBreakdown];
+        } else {
+          delete merged[sourceName];
         }
       }
       
-      // cursor should be preserved (not in incomingSources)
-      expect(merged.cursor).toEqual(existingSourceBreakdown.cursor);
-      // claude should be updated
+      expect(merged.codex).toEqual(existingSourceBreakdown.codex);
       expect(merged.claude.tokens).toBe(1200);
-      expect(merged.claude.cost).toBe(12);
+      expect(merged.cursor).toBeUndefined();
     });
 
     it('should update submitted source data', () => {

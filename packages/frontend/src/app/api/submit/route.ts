@@ -92,7 +92,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Track which sources are in this submission
     const submittedSources = new Set(data.summary.sources);
 
     // ========================================
@@ -173,9 +172,25 @@ export async function POST(request: Request) {
       // ------------------------------------------
       for (const incomingDay of data.contributions) {
         // Build incoming sourceBreakdown from CLI data
+        // IMPORTANT: CLI sends multiple entries per source (one per model)
+        // We must AGGREGATE them, not overwrite
         const incomingSourceBreakdown: Record<string, SourceBreakdownData> = {};
         for (const source of incomingDay.sources) {
-          incomingSourceBreakdown[source.source] = sourceContributionToBreakdownData(source);
+          const converted = sourceContributionToBreakdownData(source);
+          const existing = incomingSourceBreakdown[source.source];
+          if (existing) {
+            // Aggregate with existing entry for same source
+            existing.tokens += converted.tokens;
+            existing.cost += converted.cost;
+            existing.input += converted.input;
+            existing.output += converted.output;
+            existing.cacheRead += converted.cacheRead;
+            existing.cacheWrite += converted.cacheWrite;
+            existing.messages += converted.messages;
+            // Keep first modelId (or could concatenate, but not critical)
+          } else {
+            incomingSourceBreakdown[source.source] = converted;
+          }
         }
 
         const existingDay = existingDaysMap.get(incomingDay.date);
@@ -238,6 +253,7 @@ export async function POST(request: Request) {
           dateStart: sql<string>`MIN(${dailyBreakdown.date})`,
           dateEnd: sql<string>`MAX(${dailyBreakdown.date})`,
           activeDays: sql<number>`COUNT(CASE WHEN ${dailyBreakdown.tokens} > 0 THEN 1 END)::int`,
+          rowCount: sql<number>`COUNT(*)::int`,
         })
         .from(dailyBreakdown)
         .where(eq(dailyBreakdown.submissionId, submissionId));
