@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Tokscale](./.github/assets/hero.png)](https://github.com/junhoyeo/tokscale#tokscale)
+[![Tokscale](./.github/assets/hero.png)](https://tokscale.ai)
 
 </div>
 
@@ -30,6 +30,12 @@
 | Daily Summary | Stats |
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
+
+| Frontend (3D Contributions Graph) |
+|:---:|
+| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> |
+
+> **运行 [`bunx tokscale submit`](#社交平台命令) 将您的使用数据提交到排行榜并创建公开个人资料！**
 
 ## 概述
 
@@ -269,6 +275,8 @@ tokscale submit --dry-run
 tokscale logout
 ```
 
+<img alt="CLI Submit" src="./.github/assets/cli-submit.png" />
+
 ### Cursor IDE 命令
 
 Cursor IDE 需要通过会话令牌进行单独认证（与社交平台登录不同）：
@@ -487,21 +495,6 @@ Tokscale 包含一个社交平台，您可以在其中分享使用数据并与�
 - 无未来日期
 - 必填字段存在
 - 重复检测
-
-### 自托管
-
-运行您自己的实例：
-
-1. 设置 PostgreSQL 数据库（Neon、Vercel Postgres 或自托管）
-2. 配置环境变量：
-   ```bash
-   DATABASE_URL=postgresql://...
-   GITHUB_CLIENT_ID=your_client_id
-   GITHUB_CLIENT_SECRET=your_client_secret
-   NEXT_PUBLIC_URL=https://your-domain.com
-   ```
-3. 运行数据库迁移：`cd packages/frontend && bunx drizzle-kit push`
-4. 部署到 Vercel 或您偏好的平台
 
 ### 为前端生成数据
 

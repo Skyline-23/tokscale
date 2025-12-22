@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Tokscale](./.github/assets/hero.png)](https://github.com/junhoyeo/tokscale#tokscale)
+[![Tokscale](./.github/assets/hero.png)](https://tokscale.ai)
 
 </div>
 
@@ -30,6 +30,12 @@
 | Daily Summary | Stats |
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
+
+| Frontend (3D Contributions Graph) |
+|:---:|
+| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> |
+
+> **[`bunx tokscale submit`](#ソーシャルプラットフォームコマンド)を実行して、使用量データをリーダーボードに送信し、公開プロフィールを作成しましょう！**
 
 ## 概要
 
@@ -269,6 +275,8 @@ tokscale submit --dry-run
 tokscale logout
 ```
 
+<img alt="CLI Submit" src="./.github/assets/cli-submit.png" />
+
 ### Cursor IDEコマンド
 
 Cursor IDEはセッショントークンによる別途認証が必要です（ソーシャルプラットフォームのログインとは異なる）：
@@ -487,21 +495,6 @@ Tokscaleには使用量データを共有し、他の開発者と競争できる
 - 未来の日付なし
 - 必須フィールドの存在
 - 重複検出
-
-### セルフホスティング
-
-独自のインスタンスを実行するには：
-
-1. PostgreSQLデータベースをセットアップ（Neon、Vercel Postgres、またはセルフホスティング）
-2. 環境変数を設定：
-   ```bash
-   DATABASE_URL=postgresql://...
-   GITHUB_CLIENT_ID=your_client_id
-   GITHUB_CLIENT_SECRET=your_client_secret
-   NEXT_PUBLIC_URL=https://your-domain.com
-   ```
-3. データベースマイグレーションを実行：`cd packages/frontend && bunx drizzle-kit push`
-4. Vercelまたはお好みのプラットフォームにデプロイ
 
 ### フロントエンド用データの生成
 
