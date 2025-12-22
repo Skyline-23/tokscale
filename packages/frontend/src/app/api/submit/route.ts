@@ -182,7 +182,7 @@ export async function POST(request: Request) {
             existing.output += modelData.output;
             existing.cacheRead += modelData.cacheRead;
             existing.cacheWrite += modelData.cacheWrite;
-            existing.reasoning += modelData.reasoning;
+            existing.reasoning = (existing.reasoning || 0) + modelData.reasoning;
             existing.messages += modelData.messages;
             const existingModel = existing.models[source.modelId];
             if (existingModel) {
@@ -192,7 +192,7 @@ export async function POST(request: Request) {
               existingModel.output += modelData.output;
               existingModel.cacheRead += modelData.cacheRead;
               existingModel.cacheWrite += modelData.cacheWrite;
-              existingModel.reasoning += modelData.reasoning;
+              existingModel.reasoning = (existingModel.reasoning || 0) + modelData.reasoning;
               existingModel.messages += modelData.messages;
             } else {
               existing.models[source.modelId] = modelData;

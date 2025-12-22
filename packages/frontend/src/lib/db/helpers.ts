@@ -49,12 +49,12 @@ export function recalculateDayTotals(
   let reasoningTokens = 0;
 
   for (const source of Object.values(sourceBreakdown)) {
-    tokens += source.tokens;
-    cost += source.cost;
-    inputTokens += source.input;
-    outputTokens += source.output;
-    cacheReadTokens += source.cacheRead;
-    cacheWriteTokens += source.cacheWrite;
+    tokens += source.tokens || 0;
+    cost += source.cost || 0;
+    inputTokens += source.input || 0;
+    outputTokens += source.output || 0;
+    cacheReadTokens += source.cacheRead || 0;
+    cacheWriteTokens += source.cacheWrite || 0;
     reasoningTokens += source.reasoning || 0;
   }
 
