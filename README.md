@@ -31,6 +31,12 @@
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
 
+| Frontend (3D Contributions Graph) |
+|:---:|
+| <img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /> |
+
+> **Run `bunx tokscale submit` to submit your usage data to the leaderboard and create your public profile!**
+
 ## Overview
 
 **Tokscale** helps you monitor and analyze your token consumption from:
@@ -489,21 +495,6 @@ Submitted data goes through Level 1 validation:
 - No future dates
 - Required fields present
 - Duplicate detection
-
-### Self-Hosting
-
-To run your own instance:
-
-1. Set up a PostgreSQL database (Neon, Vercel Postgres, or self-hosted)
-2. Configure environment variables:
-   ```bash
-   DATABASE_URL=postgresql://...
-   GITHUB_CLIENT_ID=your_client_id
-   GITHUB_CLIENT_SECRET=your_client_secret
-   NEXT_PUBLIC_URL=https://your-domain.com
-   ```
-3. Run database migrations: `cd packages/frontend && bunx drizzle-kit push`
-4. Deploy to Vercel or your preferred platform
 
 ### Generating Data for Frontend
 
