@@ -465,13 +465,6 @@ Submitted data goes through Level 1 validation:
 - Required fields present
 - Duplicate detection
 
-### Generating Data for Frontend
-
-```bash
-# Export data for visualization
-tokscale graph --output packages/frontend/public/my-data.json
-```
-
 ## Development
 
 > **Quick setup**: If you just want to get started quickly, see [Development Setup](#development-setup) in the Installation section above.
@@ -574,6 +567,13 @@ tokscale --benchmark           # Show processing time with default view
 tokscale models --benchmark    # Benchmark models report
 tokscale monthly --benchmark   # Benchmark monthly report
 tokscale graph --benchmark     # Benchmark graph generation
+```
+
+### Generating Data for Frontend
+
+```bash
+# Export data for visualization
+tokscale graph --output packages/frontend/public/my-data.json
 ```
 
 </details>
