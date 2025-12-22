@@ -197,9 +197,23 @@ export default function ProfilePageClient() {
     );
   }
 
+  const EARLY_ADOPTERS = ["code-yeongyu", "gtg7784", "qodot"];
+  const showResubmitBanner = EARLY_ADOPTERS.includes(data.user.username) && data.stats.submissionCount === 1;
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#10121C" }}>
       <Navigation />
+
+      {showResubmitBanner && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20">
+          <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-3">
+            <p className="text-sm text-amber-200">
+              <span className="font-semibold">Update available:</span>{" "}
+              Re-submit your data with <code className="px-1.5 py-0.5 rounded bg-amber-500/20 font-mono text-xs">bunx tokscale submit</code> to see detailed model breakdowns per day.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 max-w-[800px] mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
         <div className="flex flex-col gap-8">
