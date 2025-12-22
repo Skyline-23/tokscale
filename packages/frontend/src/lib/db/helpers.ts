@@ -89,20 +89,21 @@ export function buildModelBreakdown(
  */
 export function sourceContributionToBreakdownData(
   source: {
-    tokens: { input: number; output: number; cacheRead: number; cacheWrite: number };
+    tokens: { input: number; output: number; cacheRead: number; cacheWrite: number; reasoning?: number };
     cost: number;
     modelId: string;
     messages: number;
   }
 ): SourceBreakdownData {
+  const { input, output, cacheRead, cacheWrite, reasoning = 0 } = source.tokens;
   return {
-    tokens: source.tokens.input + source.tokens.output,
+    tokens: input + output + cacheRead + cacheWrite + reasoning,
     cost: source.cost,
     modelId: source.modelId,
-    input: source.tokens.input,
-    output: source.tokens.output,
-    cacheRead: source.tokens.cacheRead,
-    cacheWrite: source.tokens.cacheWrite,
+    input,
+    output,
+    cacheRead,
+    cacheWrite,
     messages: source.messages,
   };
 }
