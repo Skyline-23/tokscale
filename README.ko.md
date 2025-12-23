@@ -31,9 +31,9 @@
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
 
-| Frontend (3D Contributions Graph) |
-|:---:|
-| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> |
+| Frontend (3D Contributions Graph) | Wrapped 2025 |
+|:---:|:---:|
+| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> | <a href="#wrapped-2025"><img alt="Wrapped 2025" src=".github/assets/wrapped-2025.png" width="700px" /></a> |
 
 > **[`bunx tokscale submit`](#소셜-플랫폼-명령어)를 실행하여 사용량 데이터를 리더보드에 제출하고 공개 프로필을 만드세요!**
 
@@ -221,36 +221,6 @@ tokscale monthly --month --benchmark
 ```
 
 > **참고**: 날짜 필터는 로컬 타임존을 사용합니다. `--since`와 `--until` 모두 해당 날짜를 포함합니다.
-
-### 그래프 명령어 옵션
-
-```bash
-# 그래프 데이터를 파일로 내보내기
-tokscale graph --output usage-data.json
-
-# 날짜 필터링 (모든 단축키 사용 가능)
-tokscale graph --today
-tokscale graph --week
-tokscale graph --since 2024-01-01 --until 2024-12-31
-tokscale graph --year 2024
-
-# 플랫폼별 필터
-tokscale graph --opencode --claude
-
-# 처리 시간 벤치마크 표시
-tokscale graph --output data.json --benchmark
-```
-
-### 벤치마크 플래그
-
-성능 분석을 위한 처리 시간 표시:
-
-```bash
-tokscale --benchmark           # 기본 뷰와 함께 처리 시간 표시
-tokscale models --benchmark    # 모델 리포트 벤치마크
-tokscale monthly --benchmark   # 월별 리포트 벤치마크
-tokscale graph --benchmark     # 그래프 생성 벤치마크
-```
 
 ### 소셜 플랫폼 명령어
 
@@ -495,12 +465,40 @@ Tokscale은 사용량 데이터를 공유하고 다른 개발자와 경쟁할 �
 - 필수 필드 존재
 - 중복 감지
 
-### 프론트엔드용 데이터 생성
+## Wrapped 2025
+
+Spotify Wrapped에서 영감을 받아, AI 코딩 어시스턴트 사용량을 요약한 아름다운 연간 리뷰 이미지를 생성합니다.
+
+<div align="center">
+
+![Wrapped 2025](.github/assets/wrapped-2025.png)
+
+</div>
+
+### 명령어
 
 ```bash
-# 시각화용 데이터 내보내기
-tokscale graph --output packages/frontend/public/my-data.json
+# 현재 연도의 Wrapped 이미지 생성
+tokscale wrapped
+
+# 특정 연도의 Wrapped 이미지 생성
+tokscale wrapped --year 2025
 ```
+
+### 포함 내용
+
+생성된 이미지에는 다음이 포함됩니다:
+
+- **총 토큰** - 해당 연도의 총 토큰 소비량
+- **상위 모델** - 비용 기준 상위 3개 AI 모델
+- **상위 클라이언트** - 가장 많이 사용한 3개 플랫폼 (OpenCode, Claude Code, Cursor 등)
+- **메시지** - 총 AI 인터랙션 수
+- **활동 일수** - 최소 1회 이상 AI 인터랙션이 있었던 일수
+- **비용** - LiteLLM 가격 기준 추정 총비용
+- **연속 기록** - 가장 긴 연속 활동 일수
+- **기여 그래프** - 연간 활동을 보여주는 히트맵
+
+생성된 PNG는 소셜 미디어 공유에 최적화되어 있습니다. 커뮤니티와 함께 코딩 여정을 공유하세요!
 
 ## 개발
 
@@ -517,7 +515,7 @@ rustc --version
 cargo --version
 ```
 
-### 고급 개발
+### 실행 방법
 
 [개발 환경 설정](#개발-환경-설정)을 따른 후:
 
@@ -531,6 +529,9 @@ cd packages/cli && bun src/cli.ts
 # 또는 레거시 CLI 모드 사용
 cd packages/cli && bun src/cli.ts --light
 ```
+
+<details>
+<summary>고급 개발</summary>
 
 ### 프로젝트 스크립트
 
@@ -572,6 +573,45 @@ bun run build
 # Rust 벤치마크 실행
 bun run bench
 ```
+
+### 그래프 명령어 옵션
+
+```bash
+# 그래프 데이터를 파일로 내보내기
+tokscale graph --output usage-data.json
+
+# 날짜 필터링 (모든 단축키 사용 가능)
+tokscale graph --today
+tokscale graph --week
+tokscale graph --since 2024-01-01 --until 2024-12-31
+tokscale graph --year 2024
+
+# 플랫폼별 필터
+tokscale graph --opencode --claude
+
+# 처리 시간 벤치마크 표시
+tokscale graph --output data.json --benchmark
+```
+
+### 벤치마크 플래그
+
+성능 분석을 위한 처리 시간 표시:
+
+```bash
+tokscale --benchmark           # 기본 뷰와 함께 처리 시간 표시
+tokscale models --benchmark    # 모델 리포트 벤치마크
+tokscale monthly --benchmark   # 월별 리포트 벤치마크
+tokscale graph --benchmark     # 그래프 생성 벤치마크
+```
+
+### 프론트엔드용 데이터 생성
+
+```bash
+# 시각화용 데이터 내보내기
+tokscale graph --output packages/frontend/public/my-data.json
+```
+
+</details>
 
 ## 지원 플랫폼
 

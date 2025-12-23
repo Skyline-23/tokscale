@@ -31,11 +31,52 @@
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
 
-| Frontend (3D Contributions Graph) |
-|:---:|
-| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> |
+| Frontend (3D Contributions Graph) | Wrapped 2025 |
+|:---:|:---:|
+| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> | <a href="#wrapped-2025"><img alt="Wrapped 2025" src=".github/assets/wrapped-2025.png" width="700px" /></a> |
 
 > **Run [`bunx tokscale submit`](#social) to submit your usage data to the leaderboard and create your public profile!**
+
+## Contents
+
+- [Overview](#overview)
+  - [Why "Tokscale"?](#why-tokscale)
+- [Features](#features)
+- [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Development Setup](#development-setup)
+  - [Building the Native Module (Optional)](#building-the-native-module-optional)
+- [Usage](#usage)
+  - [Basic Commands](#basic-commands)
+  - [TUI Features](#tui-features)
+  - [Filtering by Platform](#filtering-by-platform)
+  - [Date Filtering](#date-filtering)
+  - [Social](#social)
+  - [Cursor IDE Commands](#cursor-ide-commands)
+  - [Environment Variables](#environment-variables)
+- [Architecture](#architecture)
+  - [Hybrid TypeScript + Rust Architecture](#hybrid-typescript--rust-architecture)
+  - [Key Technologies](#key-technologies)
+- [Performance](#performance)
+  - [Memory Optimization](#memory-optimization)
+  - [Running Benchmarks](#running-benchmarks)
+- [Frontend Visualization](#frontend-visualization)
+  - [Features](#features-1)
+  - [Running the Frontend](#running-the-frontend)
+- [Social Platform](#social-platform)
+  - [Features](#features-2)
+  - [Getting Started](#getting-started)
+  - [Data Validation](#data-validation)
+- [Wrapped 2025](#wrapped-2025)
+- [Development](#development)
+- [Supported Platforms](#supported-platforms)
+- [Session Data Retention](#session-data-retention)
+- [Data Sources](#data-sources)
+- [Pricing](#pricing)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
 
 ## Overview
 
@@ -464,6 +505,41 @@ Submitted data goes through Level 1 validation:
 - No future dates
 - Required fields present
 - Duplicate detection
+
+## Wrapped 2025
+
+Generate a beautiful year-in-review image summarizing your AI coding assistant usage—inspired by Spotify Wrapped.
+
+<div align="center">
+
+![Wrapped 2025](.github/assets/wrapped-2025.png)
+
+</div>
+
+### Command
+
+```bash
+# Generate wrapped image for current year
+tokscale wrapped
+
+# Generate for a specific year
+tokscale wrapped --year 2025
+```
+
+### What's Included
+
+The generated image includes:
+
+- **Total Tokens** - Your total token consumption for the year
+- **Top Models** - Your 3 most-used AI models ranked by cost
+- **Top Clients** - Your 3 most-used platforms (OpenCode, Claude Code, Cursor, etc.)
+- **Messages** - Total number of AI interactions
+- **Active Days** - Days with at least one AI interaction
+- **Cost** - Estimated total cost based on LiteLLM pricing
+- **Streak** - Your longest consecutive streak of active days
+- **Contribution Graph** - A visual heatmap of your yearly activity
+
+The generated PNG is optimized for sharing on social media. Share your coding journey with the community!
 
 ## Development
 
