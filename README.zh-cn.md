@@ -31,9 +31,9 @@
 |:---:|:---:|
 | ![TUI Daily Summary](.github/assets/tui-daily.png) | ![TUI Stats](.github/assets/tui-stats.png) | 
 
-| Frontend (3D Contributions Graph) |
-|:---:|
-| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> |
+| Frontend (3D Contributions Graph) | Wrapped 2025 |
+|:---:|:---:|
+| <a href="https://tokscale.ai"><img alt="Frontend (3D Contributions Graph" src=".github/assets/frontend-contributions-graph.png" width="700px" /></a> | <a href="#wrapped-2025"><img alt="Wrapped 2025" src=".github/assets/wrapped-2025.png" width="700px" /></a> |
 
 > **运行 [`bunx tokscale submit`](#社交平台命令) 将您的使用数据提交到排行榜并创建公开个人资料！**
 
@@ -222,36 +222,6 @@ tokscale monthly --month --benchmark
 ```
 
 > **注意**：日期筛选器使用本地时区。`--since` 和 `--until` 都是包含的。
-
-### 图表命令选项
-
-```bash
-# 导出图表数据到文件
-tokscale graph --output usage-data.json
-
-# 日期筛选（所有快捷方式都有效）
-tokscale graph --today
-tokscale graph --week
-tokscale graph --since 2024-01-01 --until 2024-12-31
-tokscale graph --year 2024
-
-# 按平台筛选
-tokscale graph --opencode --claude
-
-# 显示处理时间基准
-tokscale graph --output data.json --benchmark
-```
-
-### 基准测试标志
-
-显示处理时间以进行性能分析：
-
-```bash
-tokscale --benchmark           # 显示默认视图的处理时间
-tokscale models --benchmark    # 基准测试模型报告
-tokscale monthly --benchmark   # 基准测试月度报告
-tokscale graph --benchmark     # 基准测试图表生成
-```
 
 ### 社交平台命令
 
@@ -496,12 +466,40 @@ Tokscale 包含一个社交平台，您可以在其中分享使用数据并与�
 - 必填字段存在
 - 重复检测
 
-### 为前端生成数据
+## Wrapped 2025
+
+生成一张精美的年度回顾图片，总结您的 AI 编程助手使用情况——灵感来自 Spotify Wrapped。
+
+<div align="center">
+
+![Wrapped 2025](.github/assets/wrapped-2025.png)
+
+</div>
+
+### 命令
 
 ```bash
-# 导出可视化数据
-tokscale graph --output packages/frontend/public/my-data.json
+# 生成当前年份的 Wrapped 图片
+tokscale wrapped
+
+# 生成指定年份的 Wrapped 图片
+tokscale wrapped --year 2025
 ```
+
+### 包含内容
+
+生成的图片包括：
+
+- **总 Token 数** - 您当年的总 Token 消耗量
+- **热门模型** - 按成本排名的前 3 个最常用 AI 模型
+- **热门客户端** - 前 3 个最常用平台（OpenCode、Claude Code、Cursor 等）
+- **消息数** - AI 交互总数
+- **活跃天数** - 至少有一次 AI 交互的天数
+- **成本** - 基于 LiteLLM 定价的估计总成本
+- **连续记录** - 最长连续活跃天数
+- **贡献图** - 年度活动的可视化热力图
+
+生成的 PNG 已针对社交媒体分享进行优化。与社区分享您的编程之旅！
 
 ## 开发
 
@@ -518,7 +516,7 @@ rustc --version
 cargo --version
 ```
 
-### 高级开发
+### 运行方法
 
 按照[开发环境设置](#开发环境设置)后，您可以：
 
@@ -532,6 +530,9 @@ cd packages/cli && bun src/cli.ts
 # 或使用传统 CLI 模式
 cd packages/cli && bun src/cli.ts --light
 ```
+
+<details>
+<summary>高级开发</summary>
 
 ### 项目脚本
 
@@ -573,6 +574,45 @@ bun run build
 # 运行 Rust 基准测试
 bun run bench
 ```
+
+### 图表命令选项
+
+```bash
+# 导出图表数据到文件
+tokscale graph --output usage-data.json
+
+# 日期筛选（所有快捷方式都有效）
+tokscale graph --today
+tokscale graph --week
+tokscale graph --since 2024-01-01 --until 2024-12-31
+tokscale graph --year 2024
+
+# 按平台筛选
+tokscale graph --opencode --claude
+
+# 显示处理时间基准
+tokscale graph --output data.json --benchmark
+```
+
+### 基准测试标志
+
+显示处理时间以进行性能分析：
+
+```bash
+tokscale --benchmark           # 显示默认视图的处理时间
+tokscale models --benchmark    # 基准测试模型报告
+tokscale monthly --benchmark   # 基准测试月度报告
+tokscale graph --benchmark     # 基准测试图表生成
+```
+
+### 为前端生成数据
+
+```bash
+# 导出可视化数据
+tokscale graph --output packages/frontend/public/my-data.json
+```
+
+</details>
 
 ## 支持的平台
 
