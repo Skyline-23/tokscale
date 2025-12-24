@@ -454,6 +454,7 @@ export function useData(enabledSources: Accessor<Set<SourceType>>, dateFilters?:
   const [forceRefresh, setForceRefresh] = createSignal(false);
 
   const refresh = () => {
+    if (isRefreshing() || loading()) return;
     setForceRefresh(true);
     setRefreshTrigger(prev => prev + 1);
   };
