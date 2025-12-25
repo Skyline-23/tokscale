@@ -3,6 +3,7 @@ import { Resvg } from "@resvg/resvg-js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import pc from "picocolors";
 import {
   parseLocalSourcesAsync,
   finalizeReportAsync,
@@ -834,9 +835,21 @@ async function generateWrappedImage(data: WrappedData, options: { short?: boolea
 
 export async function generateWrapped(options: WrappedOptions): Promise<string> {
   const data = await loadWrappedData(options);
+
+  const agentsRequested = options.includeAgents !== false;
+  const hasAgentData = !!data.topAgents?.length;
+  const opencodeEnabled = !options.sources || options.sources.includes("opencode");
+  let effectiveIncludeAgents = agentsRequested && hasAgentData;
+
+  if (agentsRequested && opencodeEnabled && !hasAgentData) {
+    console.warn(pc.yellow(`\n  ⚠ No OpenCode agent data found for ${data.year}.`));
+    console.warn(pc.gray("    Falling back to clients view."));
+    console.warn(pc.gray("    Use --clients to always show clients view.\n"));
+  }
+
   const imageBuffer = await generateWrappedImage(data, {
     short: options.short,
-    includeAgents: options.includeAgents,
+    includeAgents: effectiveIncludeAgents,
     pinSisyphus: options.pinSisyphus,
   });
 
