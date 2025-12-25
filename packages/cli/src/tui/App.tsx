@@ -396,7 +396,6 @@ export function App(props: AppProps) {
                   width={columns()}
                   selectedDate={selectedDate()}
                   sortBy={sortBy()}
-                  onSortChange={setSortBy}
                 />
               </Match>
             </Switch>

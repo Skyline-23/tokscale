@@ -15,7 +15,6 @@ interface StatsViewProps {
   width?: number;
   selectedDate?: string | null;
   sortBy?: SortType;
-  onSortChange?: (sort: SortType) => void;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -25,14 +24,6 @@ const DAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
 interface MonthLabel {
   month: string;
   weekIndex: number;
-}
-
-function MetricButton(props: { label: string; metric: SortType; active: boolean; onClick?: (m: SortType) => void }) {
-  return (
-    <box onMouseDown={() => props.onClick?.(props.metric)}>
-      <text fg={props.active ? "white" : "gray"} bold={props.active}>{props.label}</text>
-    </box>
-  );
 }
 
 export function StatsView(props: StatsViewProps) {
@@ -189,9 +180,6 @@ export function StatsView(props: StatsViewProps) {
           </For>
         </box>
         <text dim>More</text>
-        <text dim>|</text>
-        <MetricButton label="Tokens" metric="tokens" active={metric() === "tokens"} onClick={props.onSortChange} />
-        <MetricButton label="Cost" metric="cost" active={metric() === "cost"} onClick={props.onSortChange} />
         <Show when={!isNarrowTerminal()}>
           <text dim>|</text>
           <text dim>Click on a day to see breakdown</text>
