@@ -320,6 +320,22 @@ const TokenValue = styled.span`
   }
 `;
 
+const TokenValueFull = styled.span`
+  display: none;
+  
+  @media (min-width: 768px) {
+    display: inline;
+  }
+`;
+
+const TokenValueAbbrev = styled.span`
+  display: inline;
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
 const CombinedValueContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -747,7 +763,8 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                             <TokenValue
                               title={user.totalTokens.toLocaleString('en-US')}
                             >
-                              {formatNumber(user.totalTokens)}
+                              <TokenValueFull>{user.totalTokens.toLocaleString('en-US')}</TokenValueFull>
+                              <TokenValueAbbrev>{formatNumber(user.totalTokens)}</TokenValueAbbrev>
                             </TokenValue>
                             <CostValue
                               title={user.totalCost.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })}
