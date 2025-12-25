@@ -41,15 +41,23 @@ const Heading = styled.h3`
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 
+  @media (max-width: 560px) {
+    gap: 16px;
+  }
+
+  @media (max-width: 400px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   @media (min-width: 640px) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 `;
 
@@ -71,6 +79,11 @@ const SourcesLabel = styled.span`
   letter-spacing: 0.05em;
   margin-right: 12px;
   color: var(--color-fg-muted);
+
+  @media (max-width: 480px) {
+    width: 100%;
+    margin-right: 0;
+  }
 `;
 
 const SourceBadge = styled.span<{ $backgroundColor: string }>`
@@ -81,6 +94,11 @@ const SourceBadge = styled.span<{ $backgroundColor: string }>`
   transition: all 200ms ease-in-out;
   background-color: ${props => props.$backgroundColor};
   color: var(--color-fg-default);
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:hover {
     transform: scale(1.05);
@@ -91,6 +109,7 @@ const StatItemContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 `;
 
 const StatItemLabel = styled.div`
@@ -99,6 +118,7 @@ const StatItemLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
 `;
 
 const StatItemValue = styled.div<{ $highlight?: boolean; $color?: string }>`
@@ -106,6 +126,12 @@ const StatItemValue = styled.div<{ $highlight?: boolean; $color?: string }>`
   letter-spacing: -0.025em;
   font-size: ${props => props.$highlight ? '20px' : '18px'};
   color: ${props => props.$color || 'var(--color-fg-default)'};
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 400px) {
+    font-size: ${props => props.$highlight ? '18px' : '16px'};
+  }
 `;
 
 const StatItemSubValue = styled.div`

@@ -35,7 +35,8 @@ export function TokenGraph2D({ contributions, palette, year, onDayHover, onDayCl
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   };
 
-  const canvasWidth = CANVAS_MARGIN * 2 + TEXT_HEIGHT + weeksData.length * CELL_SIZE;
+  const CANVAS_LABEL_RIGHT_PADDING = 32;
+  const canvasWidth = CANVAS_MARGIN * 2 + TEXT_HEIGHT + weeksData.length * CELL_SIZE + CANVAS_LABEL_RIGHT_PADDING;
   const canvasHeight = HEADER_HEIGHT + 7 * CELL_SIZE + CANVAS_MARGIN;
 
   useEffect(() => {

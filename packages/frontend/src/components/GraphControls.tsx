@@ -119,6 +119,13 @@ const FiltersWrapper = styled.div`
   justify-content: space-between;
   gap: 12px;
   margin-top: 12px;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+  }
 `;
 
 const SourceFilterGroup = styled.div`
@@ -126,11 +133,27 @@ const SourceFilterGroup = styled.div`
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 560px) {
+    flex-wrap: nowrap;
+  }
 `;
 
 const FilterLabel = styled.span`
   font-size: 12px;
   font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
 `;
 
 const SourceFilterButton = styled.button<{ $isSelected: boolean }>`
@@ -141,6 +164,9 @@ const SourceFilterButton = styled.button<{ $isSelected: boolean }>`
   font-weight: ${({ $isSelected }) => $isSelected ? '600' : '400'};
   opacity: ${({ $isSelected }) => $isSelected ? '1' : '0.5'};
   border: 1.5px solid;
+  flex: 0 0 auto;
+  min-height: 44px;
+  touch-action: manipulation;
   
   &:hover {
     transform: scale(1.05);
@@ -149,6 +175,10 @@ const SourceFilterButton = styled.button<{ $isSelected: boolean }>`
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px #3b82f6;
+  }
+
+  @media (max-width: 400px) {
+    padding: 8px 10px;
   }
 `;
 
@@ -182,6 +212,13 @@ const LegendContainer = styled.div`
   align-items: center;
   gap: 8px;
   margin-left: auto;
+
+  @media (max-width: 560px) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+    min-width: 0;
+  }
 `;
 
 const LegendText = styled.span`

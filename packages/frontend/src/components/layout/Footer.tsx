@@ -10,6 +10,16 @@ const Container = styled.div`
   margin-right: auto;
   padding-left: 24px;
   padding-right: 24px;
+
+  @media (max-width: 560px) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  @media (max-width: 400px) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 `;
 
 const FooterElement = styled.footer`
@@ -19,6 +29,14 @@ const FooterElement = styled.footer`
   border-radius: 20px;
   overflow: hidden;
   background: linear-gradient(to bottom, black, #10121C);
+
+  @media (max-width: 560px) {
+    height: 350px;
+  }
+
+  @media (max-width: 400px) {
+    height: 320px;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -29,12 +47,34 @@ const ContentContainer = styled.div`
   flex-direction: column;
   gap: 21px;
   z-index: 10;
+
+  @media (max-width: 560px) {
+    top: 32px;
+    left: 24px;
+    gap: 16px;
+  }
+
+  @media (max-width: 400px) {
+    top: 24px;
+    left: 16px;
+    gap: 12px;
+  }
 `;
 
 const LogoContainer = styled.div`
   position: relative;
   width: 107.29px;
   height: 100px;
+
+  @media (max-width: 560px) {
+    width: 80px;
+    height: 74.58px;
+  }
+
+  @media (max-width: 400px) {
+    width: 64px;
+    height: 59.66px;
+  }
 `;
 
 const LogoImage = styled(Image)`
@@ -54,12 +94,30 @@ const LogoLink = styled.a`
 const LogoSvg = styled(Image)`
   width: 184px;
   height: 21px;
+
+  @media (max-width: 560px) {
+    width: 138px;
+    height: 15.75px;
+  }
+
+  @media (max-width: 400px) {
+    width: 110px;
+    height: 12.55px;
+  }
 `;
 
 const Divider = styled.div`
   width: 74px;
   height: 2px;
   background: #0073FF;
+
+  @media (max-width: 560px) {
+    width: 56px;
+  }
+
+  @media (max-width: 400px) {
+    width: 44px;
+  }
 `;
 
 const TextContainer = styled.div`
@@ -74,6 +132,10 @@ const CopyrightText = styled.p`
   font-weight: 500;
   line-height: 1.25;
   font-family: sans-serif;
+
+  @media (max-width: 560px) {
+    font-size: 14px;
+  }
 `;
 
 const GitHubLink = styled.a`
@@ -87,6 +149,10 @@ const GitHubLink = styled.a`
   &:hover {
     color: #0073FF;
   }
+
+  @media (max-width: 560px) {
+    font-size: 14px;
+  }
 `;
 
 const GlobeContainer = styled.div`
@@ -95,6 +161,16 @@ const GlobeContainer = styled.div`
   top: -135px;
   pointer-events: none;
   user-select: none;
+
+  @media (max-width: 560px) {
+    top: -70px;
+    right: -20px;
+  }
+
+  @media (max-width: 400px) {
+    top: -50px;
+    right: -30px;
+  }
 `;
 
 const SpinningGlobe = styled(Image)`
@@ -109,6 +185,14 @@ const SpinningGlobe = styled(Image)`
     to {
       transform: rotate(360deg);
     }
+  }
+
+  @media (max-width: 560px) {
+    width: 280px;
+  }
+
+  @media (max-width: 400px) {
+    width: 220px;
   }
 `;
 

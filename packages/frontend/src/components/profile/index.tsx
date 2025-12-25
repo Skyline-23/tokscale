@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { GraphContainer } from "@/components/GraphContainer";
 import type { TokenContributionData } from "@/lib/types";
 import { formatNumber, formatCurrency } from "@/lib/utils";
+import { legacy } from "@/lib/responsive";
 
 export interface ProfileUser {
   username: string;
@@ -68,13 +69,33 @@ const UserInfoCard = styled.div`
 
 const AvatarContainer = styled.div`
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 72px;
+  height: 72px;
   border-radius: 7px;
   overflow: hidden;
   border-width: 2px;
   border-style: solid;
   flex-shrink: 0;
+
+  ${legacy.up('navXs')} {
+    width: 80px;
+    height: 80px;
+  }
+
+  @media (min-width: 480px) {
+    width: 88px;
+    height: 88px;
+  }
+
+  ${legacy.up('phone')} {
+    width: 96px;
+    height: 96px;
+  }
+
+  @media (min-width: 768px) {
+    width: 100px;
+    height: 100px;
+  }
 `;
 
 const StyledAvatarImage = styled(Image)`
@@ -90,7 +111,23 @@ const UserDetails = styled.div`
   gap: 6px;
   padding-top: 0;
   padding-bottom: 0.25rem;
-  height: 100px;
+  min-height: 72px;
+
+  ${legacy.up('navXs')} {
+    min-height: 80px;
+  }
+
+  @media (min-width: 480px) {
+    min-height: 88px;
+  }
+
+  ${legacy.up('phone')} {
+    min-height: 96px;
+  }
+
+  @media (min-width: 768px) {
+    min-height: 100px;
+  }
 `;
 
 const RankBadge = styled.div`
@@ -117,12 +154,20 @@ const NameContainer = styled.div`
 `;
 
 const NameHeading = styled.h1`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.2;
+
+  @media (min-width: 390px) {
+    font-size: 1.375rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const HandleText = styled.p`
@@ -135,29 +180,86 @@ const StatsRow = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 1.75rem;
-  height: 124px;
+  gap: 0.75rem;
+  min-height: 88px;
   flex: 1;
+
+  @media (min-width: 390px) {
+    gap: 1rem;
+    min-height: 92px;
+  }
+
+  @media (min-width: 480px) {
+    gap: 1.25rem;
+    min-height: 104px;
+  }
+
+  ${legacy.up('phone')} {
+    gap: 1.5rem;
+    min-height: 112px;
+  }
+
+  @media (min-width: 768px) {
+    gap: 1.75rem;
+    min-height: 124px;
+  }
 `;
 
 const StatItem = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
-  min-width: 120px;
+  min-width: 0;
+
+  @media (min-width: 390px) {
+    gap: 7px;
+  }
+
+  @media (min-width: 480px) {
+    gap: 8px;
+    min-width: 100px;
+  }
+
+  ${legacy.up('phone')} {
+    min-width: 110px;
+  }
+
+  @media (min-width: 768px) {
+    min-width: 120px;
+  }
 `;
 
 const StatLabel = styled.span`
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
+
+  @media (min-width: 390px) {
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 1rem;
+  }
 `;
 
 const StatValue = styled.span`
-  font-size: 27px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1;
+
+  @media (min-width: 390px) {
+    font-size: 24px;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 26px;
+  }
+
+  ${legacy.up('phone')} {
+    font-size: 27px;
+  }
 `;
 
 const Divider = styled.div`
@@ -199,10 +301,8 @@ const actionButtonStyles = css`
   border-radius: 9999px;
   border-width: 1px;
   border-style: solid;
-  padding-top: 9px;
-  padding-bottom: 9px;
-  padding-left: 10px;
-  padding-right: 11px;
+  padding: 12px 11px;
+  min-height: 44px;
   transition: opacity 150ms ease-in-out;
   cursor: pointer;
 
@@ -389,6 +489,15 @@ const TabBarContainer = styled.div`
   border-style: solid;
   padding: 6px;
   width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const TabButton = styled.button`
@@ -396,13 +505,28 @@ const TabButton = styled.button`
   align-items: center;
   justify-content: center;
   border-radius: 25px;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 10px 1rem;
   transition: background-color 150ms;
   cursor: pointer;
   border: none;
+  flex-shrink: 0;
+  min-height: 44px;
+  scroll-snap-align: start;
+
+  @media (max-width: 400px) {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  @media (min-width: 390px) {
+    padding-left: 1.125rem;
+    padding-right: 1.125rem;
+  }
+
+  @media (min-width: 480px) {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 
   &:focus-visible {
     outline: none;
@@ -411,10 +535,22 @@ const TabButton = styled.button`
 `;
 
 const TabText = styled.span`
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
+
+  @media (min-width: 390px) {
+    font-size: 1rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 1.0625rem;
+  }
+
+  ${legacy.up('phone')} {
+    font-size: 1.125rem;
+  }
 `;
 
 export function ProfileTabBar({ activeTab, onTabChange }: ProfileTabBarProps) {
@@ -727,10 +863,10 @@ const ModelsListContainer = styled.div`
 
 const ModelsListHeader = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
   font-size: 0.75rem;
@@ -740,6 +876,13 @@ const ModelsListHeader = styled.div`
   border-bottom-width: 1px;
   border-bottom-style: solid;
 
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr auto auto auto;
+    gap: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
   @media (min-width: 640px) {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
@@ -748,13 +891,20 @@ const ModelsListHeader = styled.div`
 
 const ModelsListRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
   align-items: center;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr auto auto auto;
+    gap: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 
   @media (min-width: 640px) {
     padding-left: 1.5rem;
@@ -777,16 +927,30 @@ const ModelColorDot = styled.div`
 `;
 
 const ModelNameText = styled.span`
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  @media (min-width: 390px) {
+    font-size: 0.84375rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 0.875rem;
+  }
 `;
 
-const ModelMetricCell = styled.div<{ $width: string; $smWidth: string }>`
+const ModelMetricCell = styled.div<{ $width: string; $smWidth: string; $hideOnMobile?: boolean }>`
   text-align: right;
   width: ${props => props.$width};
+
+  ${props => props.$hideOnMobile && css`
+    @media (max-width: 479px) {
+      display: none;
+    }
+  `}
 
   @media (min-width: 640px) {
     width: ${props => props.$smWidth};
@@ -794,12 +958,28 @@ const ModelMetricCell = styled.div<{ $width: string; $smWidth: string }>`
 `;
 
 const MetricText = styled.span`
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+
+  @media (min-width: 390px) {
+    font-size: 0.84375rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 0.875rem;
+  }
 `;
 
 const CostText = styled.span`
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
+
+  @media (min-width: 390px) {
+    font-size: 0.84375rem;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 0.875rem;
+  }
 `;
 
 const ModelsTagsContainer = styled(BreakdownContainer)``;
@@ -841,7 +1021,7 @@ export function ProfileModels({ models, modelUsage }: ProfileModelsProps) {
           <div>Model</div>
           <ModelMetricCell $width="5rem" $smWidth="6rem">Tokens</ModelMetricCell>
           <ModelMetricCell $width="4rem" $smWidth="5rem">Cost</ModelMetricCell>
-          <ModelMetricCell $width="3rem" $smWidth="4rem">%</ModelMetricCell>
+          <ModelMetricCell $width="3rem" $smWidth="4rem" $hideOnMobile>%</ModelMetricCell>
         </ModelsListHeader>
 
         <div>
@@ -869,7 +1049,7 @@ export function ProfileModels({ models, modelUsage }: ProfileModelsProps) {
                   {formatCurrency(usage.cost)}
                 </CostText>
               </ModelMetricCell>
-              <ModelMetricCell $width="3rem" $smWidth="4rem">
+              <ModelMetricCell $width="3rem" $smWidth="4rem" $hideOnMobile>
                 <MetricText style={{ color: "var(--color-fg-muted)" }}>
                   {usage.percentage.toFixed(1)}%
                 </MetricText>

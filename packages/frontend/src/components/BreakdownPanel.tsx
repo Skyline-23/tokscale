@@ -31,17 +31,36 @@ const PanelHeader = styled.div`
   justify-content: space-between;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    padding: 1rem;
+    align-items: flex-start;
+  }
 `;
 
 const PanelTitle = styled.h3`
   font-weight: 700;
   font-size: 1.125rem;
+  min-width: 0;
+  flex: 1 1 auto;
+
+  @media (max-width: 560px) {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 400px) {
+    font-size: 0.9375rem;
+  }
 `;
 
 const CloseButton = styled.button`
   padding: 0.5rem;
   border-radius: 9999px;
   transition: all 200ms;
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
 
   &:hover {
     background-color: var(--color-btn-hover-bg);
@@ -315,33 +334,44 @@ const ModelHeader = styled.div`
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  min-width: 0;
 `;
 
 const ModelName = styled.span`
   font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const ModelCost = styled.span`
   font-weight: 700;
   font-size: 0.875rem;
+  flex: 0 0 auto;
 `;
 
 const TokenBadgesGrid = styled.div`
   margin-top: 0.5rem;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 1rem;
   row-gap: 0.5rem;
   font-size: 0.75rem;
 
+  @media (max-width: 400px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   @media (min-width: 640px) {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 `;
 
@@ -387,6 +417,7 @@ const BadgeContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 0.375rem;
+  min-width: 0;
 `;
 
 const BadgeLabel = styled.span`
