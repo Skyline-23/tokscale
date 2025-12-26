@@ -36,7 +36,7 @@ pub fn health_check() -> String {
 pub struct GraphOptions {
     /// Home directory path (defaults to user's home)
     pub home_dir: Option<String>,
-    /// Sources to include: "opencode", "claude", "codex", "gemini"
+    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp"
     pub sources: Option<Vec<String>>,
     /// Start date filter (YYYY-MM-DD)
     pub since: Option<String>,
@@ -89,6 +89,7 @@ pub struct ParsedMessages {
     pub claude_count: i32,
     pub codex_count: i32,
     pub gemini_count: i32,
+    pub amp_count: i32,
     pub processing_time_ms: u32,
 }
 
@@ -235,6 +236,7 @@ pub fn generate_graph(options: GraphOptions) -> napi::Result<GraphResult> {
             "codex".to_string(),
             "gemini".to_string(),
             "cursor".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -292,6 +294,14 @@ pub fn generate_graph(options: GraphOptions) -> napi::Result<GraphResult> {
         .collect();
     all_messages.extend(cursor_messages);
 
+    // Parse Amp files in parallel
+    let amp_messages: Vec<UnifiedMessage> = scan_result
+        .amp_files
+        .par_iter()
+        .flat_map(|path| sessions::amp::parse_amp_file(path))
+        .collect();
+    all_messages.extend(amp_messages);
+
     // 3. Apply date filters
     let filtered_messages = filter_messages(all_messages, &options);
 
@@ -336,6 +346,7 @@ pub struct ScanStats {
     pub codex_files: i32,
     pub gemini_files: i32,
     pub cursor_files: i32,
+    pub amp_files: i32,
     pub total_files: i32,
 }
 
@@ -351,6 +362,7 @@ pub fn scan_sessions(home_dir: Option<String>, sources: Option<Vec<String>>) -> 
             "codex".to_string(),
             "gemini".to_string(),
             "cursor".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -362,6 +374,7 @@ pub fn scan_sessions(home_dir: Option<String>, sources: Option<Vec<String>>) -> 
         codex_files: result.codex_files.len() as i32,
         gemini_files: result.gemini_files.len() as i32,
         cursor_files: result.cursor_files.len() as i32,
+        amp_files: result.amp_files.len() as i32,
         total_files: result.total_files() as i32,
     })
 }
@@ -394,7 +407,7 @@ pub struct PricingEntry {
 pub struct ReportOptions {
     /// Home directory path (defaults to user's home)
     pub home_dir: Option<String>,
-    /// Sources to include: "opencode", "claude", "codex", "gemini"
+    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp"
     pub sources: Option<Vec<String>>,
     /// Pricing data for cost calculation
     pub pricing: Vec<PricingEntry>,
@@ -615,6 +628,38 @@ fn parse_all_messages_with_pricing(
         .collect();
     all_messages.extend(cursor_messages);
 
+    // Parse Amp files in parallel
+    // Calculate cost using our pricing data for consistency with other providers
+    // Fall back to credits (original cost) only if no pricing is found
+    let amp_messages: Vec<UnifiedMessage> = scan_result
+        .amp_files
+        .par_iter()
+        .flat_map(|path| {
+            sessions::amp::parse_amp_file(path)
+                .into_iter()
+                .map(|mut msg| {
+                    let credits = msg.cost; // Store original credits value
+                    let calculated_cost = pricing_data.calculate_cost(
+                        &msg.model_id,
+                        msg.tokens.input,
+                        msg.tokens.output,
+                        msg.tokens.cache_read,
+                        msg.tokens.cache_write,
+                        msg.tokens.reasoning,
+                    );
+                    // Use calculated cost if available, otherwise keep credits
+                    msg.cost = if calculated_cost > 0.0 {
+                        calculated_cost
+                    } else {
+                        credits
+                    };
+                    msg
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    all_messages.extend(amp_messages);
+
     all_messages
 }
 
@@ -632,6 +677,7 @@ pub fn get_model_report(options: ReportOptions) -> napi::Result<ModelReport> {
             "codex".to_string(),
             "gemini".to_string(),
             "cursor".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -729,6 +775,7 @@ pub fn get_monthly_report(options: ReportOptions) -> napi::Result<MonthlyReport>
             "codex".to_string(),
             "gemini".to_string(),
             "cursor".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -801,6 +848,7 @@ pub fn generate_graph_with_pricing(options: ReportOptions) -> napi::Result<Graph
             "codex".to_string(),
             "gemini".to_string(),
             "cursor".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -865,6 +913,7 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
             "claude".to_string(),
             "codex".to_string(),
             "gemini".to_string(),
+            "amp".to_string(),
         ]
     });
 
@@ -929,6 +978,20 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
     let gemini_count = gemini_msgs.len() as i32;
     messages.extend(gemini_msgs);
 
+    // Parse Amp files in parallel
+    let amp_msgs: Vec<ParsedMessage> = scan_result
+        .amp_files
+        .par_iter()
+        .flat_map(|path| {
+            sessions::amp::parse_amp_file(path)
+                .into_iter()
+                .map(|msg| unified_to_parsed(&msg))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let amp_count = amp_msgs.len() as i32;
+    messages.extend(amp_msgs);
+
     // Apply date filters
     let filtered = filter_parsed_messages(messages, &options);
 
@@ -938,6 +1001,7 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
         claude_count,
         codex_count,
         gemini_count,
+        amp_count,
         processing_time_ms: start.elapsed().as_millis() as u32,
     })
 }
