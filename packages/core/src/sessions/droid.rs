@@ -123,8 +123,9 @@ fn extract_model_from_jsonl(jsonl_path: &Path) -> Option<String> {
     let file = std::fs::File::open(jsonl_path).ok()?;
     let reader = BufReader::new(file);
 
-    for line in reader.lines().take(50) {
-        // Only scan first 50 lines
+    // Scan more lines for parity with TypeScript which reads entire file
+    // Cap at 500 lines to avoid performance issues with very large files
+    for line in reader.lines().take(500) {
         let line = line.ok()?;
         // Look for Model: pattern in system-reminder
         if let Some(pos) = line.find("Model:") {

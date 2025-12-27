@@ -36,7 +36,7 @@ pub fn health_check() -> String {
 pub struct GraphOptions {
     /// Home directory path (defaults to user's home)
     pub home_dir: Option<String>,
-    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp"
+    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp", "droid"
     pub sources: Option<Vec<String>>,
     /// Start date filter (YYYY-MM-DD)
     pub since: Option<String>,
@@ -420,7 +420,7 @@ pub struct PricingEntry {
 pub struct ReportOptions {
     /// Home directory path (defaults to user's home)
     pub home_dir: Option<String>,
-    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp"
+    /// Sources to include: "opencode", "claude", "codex", "gemini", "cursor", "amp", "droid"
     pub sources: Option<Vec<String>>,
     /// Pricing data for cost calculation
     pub pricing: Vec<PricingEntry>,

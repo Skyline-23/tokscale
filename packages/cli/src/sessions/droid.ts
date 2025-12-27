@@ -50,8 +50,9 @@ function findSettingsFiles(dir: string): string[] {
 
 /**
  * Extract model name from Droid's custom model format
- * e.g., "custom:Claude-Opus-4.5-Thinking-[Anthropic]-0" -> "claude-opus-4-5"
- * e.g., "gemini-2.5-pro" -> "gemini-2.5-pro"
+ * e.g., "custom:Claude-Opus-4.5-Thinking-[Anthropic]-0" -> "claude-opus-4-5-thinking-0"
+ * e.g., "gemini-2.5-pro" -> "gemini-2-5-pro"
+ * e.g., "Claude-Sonnet-4-[Anthropic]" -> "claude-sonnet-4"
  */
 function normalizeModelName(model: string): string {
   // Remove "custom:" prefix if present
