@@ -67,16 +67,15 @@ function normalizeModelName(model: string): string {
   return normalized;
 }
 
-/**
- * Determine provider from model name
- */
 function getProviderFromModel(model: string): string {
   const lowerModel = model.toLowerCase();
   
-  if (lowerModel.includes("claude") || lowerModel.includes("anthropic")) {
+  if (lowerModel.includes("claude") || lowerModel.includes("anthropic") || 
+      lowerModel.includes("opus") || lowerModel.includes("sonnet") || lowerModel.includes("haiku")) {
     return "anthropic";
   }
-  if (lowerModel.includes("gpt") || lowerModel.includes("openai") || lowerModel.includes("o1")) {
+  if (lowerModel.includes("gpt") || lowerModel.includes("openai") || 
+      lowerModel.includes("o1") || lowerModel.includes("o3")) {
     return "openai";
   }
   if (lowerModel.includes("gemini") || lowerModel.includes("google")) {

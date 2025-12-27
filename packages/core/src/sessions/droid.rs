@@ -86,14 +86,22 @@ fn normalize_model_name(model: &str) -> String {
     collapsed
 }
 
-/// Determine provider from model name
 fn get_provider_from_model(model: &str) -> &'static str {
     let lower = model.to_lowercase();
 
-    if lower.contains("claude") || lower.contains("anthropic") {
+    if lower.contains("claude")
+        || lower.contains("anthropic")
+        || lower.contains("opus")
+        || lower.contains("sonnet")
+        || lower.contains("haiku")
+    {
         return "anthropic";
     }
-    if lower.contains("gpt") || lower.contains("openai") || lower.contains("o1") {
+    if lower.contains("gpt")
+        || lower.contains("openai")
+        || lower.contains("o1")
+        || lower.contains("o3")
+    {
         return "openai";
     }
     if lower.contains("gemini") || lower.contains("google") {
@@ -274,7 +282,12 @@ mod tests {
     #[test]
     fn test_get_provider_from_model() {
         assert_eq!(get_provider_from_model("claude-3-sonnet"), "anthropic");
+        assert_eq!(get_provider_from_model("opus-4"), "anthropic");
+        assert_eq!(get_provider_from_model("sonnet-4"), "anthropic");
+        assert_eq!(get_provider_from_model("haiku-3"), "anthropic");
         assert_eq!(get_provider_from_model("gpt-4o"), "openai");
+        assert_eq!(get_provider_from_model("o1-preview"), "openai");
+        assert_eq!(get_provider_from_model("o3-mini"), "openai");
         assert_eq!(get_provider_from_model("gemini-pro"), "google");
         assert_eq!(get_provider_from_model("grok-2"), "xai");
         assert_eq!(get_provider_from_model("unknown-model"), "unknown");
