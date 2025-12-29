@@ -53,6 +53,7 @@
   - [TUI Features](#tui-features)
   - [Filtering by Platform](#filtering-by-platform)
   - [Date Filtering](#date-filtering)
+  - [Pricing Lookup](#pricing-lookup)
   - [Social](#social)
   - [Cursor IDE Commands](#cursor-ide-commands)
   - [Environment Variables](#environment-variables)
@@ -262,6 +263,46 @@ tokscale monthly --month --benchmark
 ```
 
 > **Note**: Date filters use your local timezone. Both `--since` and `--until` are inclusive.
+
+### Pricing Lookup
+
+Look up real-time pricing for any model:
+
+```bash
+# Look up model pricing
+tokscale pricing "claude-3-5-sonnet-20241022"
+tokscale pricing "gpt-4o"
+tokscale pricing "grok-code"
+
+# Force specific provider source
+tokscale pricing "grok-code" --provider openrouter
+tokscale pricing "claude-3-5-sonnet" --provider litellm
+```
+
+**Lookup Strategy:**
+
+The pricing lookup uses a multi-step resolution strategy:
+
+1. **Exact Match** - Direct lookup in LiteLLM/OpenRouter databases
+2. **Alias Resolution** - Resolves friendly names (e.g., `big-pickle` → `glm-4.7`)
+3. **Tier Suffix Stripping** - Removes quality tiers (`gpt-5.2-xhigh` → `gpt-5.2`)
+4. **Version Normalization** - Handles version formats (`claude-3-5-sonnet` ↔ `claude-3.5-sonnet`)
+5. **Provider Prefix Matching** - Tries common prefixes (`anthropic/`, `openai/`, etc.)
+6. **Fuzzy Matching** - Word-boundary matching for partial model names
+
+**Provider Preference:**
+
+When multiple matches exist, original model creators are preferred over resellers:
+
+| Preferred (Original) | Deprioritized (Reseller) |
+|---------------------|-------------------------|
+| `xai/` (Grok) | `azure_ai/` |
+| `anthropic/` (Claude) | `bedrock/` |
+| `openai/` (GPT) | `vertex_ai/` |
+| `google/` (Gemini) | `together_ai/` |
+| `meta-llama/` | `fireworks_ai/` |
+
+Example: `grok-code` matches `xai/grok-code-fast-1` ($0.20/$1.50) instead of `azure_ai/grok-code-fast-1` ($3.50/$17.50).
 
 ### Social
 
