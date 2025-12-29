@@ -1163,6 +1163,65 @@ mod tests {
         assert!(!result.matched_key.starts_with("azure"));
     }
     
+    /// Test that documents the exact before/after behavior for grok-code provider preference.
+    /// This test explicitly verifies that the original provider (xai/) is preferred over resellers (azure_ai/).
+    #[test]
+    fn test_grok_code_prefers_xai_over_azure() {
+        // =========================================================================
+        // BEFORE FIX: grok-code → azure_ai/grok-code-fast-1 ($3.50/$17.50) ❌ reseller
+        // AFTER FIX:  grok-code → xai/grok-code-fast-1-0825 ($0.20/$1.50) ✅ original provider
+        //
+        // The azure_ai/ prefix indicates a reseller (Azure AI marketplace), which typically
+        // has higher prices. The xai/ prefix indicates the original provider (X.AI/Grok),
+        // which offers lower direct pricing. Our lookup should prefer the original provider.
+        // =========================================================================
+        
+        let mut litellm = HashMap::new();
+        
+        // Reseller entry: azure_ai/ prefix with higher prices ($3.50/$17.50 per 1M tokens)
+        litellm.insert("azure_ai/grok-code-fast-1".to_string(), ModelPricing {
+            input_cost_per_token: Some(0.0000035),   // $3.50/1M tokens
+            output_cost_per_token: Some(0.0000175),  // $17.50/1M tokens
+            cache_read_input_token_cost: None,
+            cache_creation_input_token_cost: None,
+        });
+        
+        // Original provider entry: xai/ prefix with lower prices ($0.20/$1.50 per 1M tokens)
+        litellm.insert("xai/grok-code-fast-1-0825".to_string(), ModelPricing {
+            input_cost_per_token: Some(0.0000002),   // $0.20/1M tokens
+            output_cost_per_token: Some(0.0000015),  // $1.50/1M tokens
+            cache_read_input_token_cost: Some(0.00000002),
+            cache_creation_input_token_cost: None,
+        });
+        
+        let lookup = PricingLookup::new(litellm, HashMap::new());
+        let result = lookup.lookup("grok-code").unwrap();
+        
+        // Must prefer xai (original provider) over azure_ai (reseller)
+        assert!(
+            result.matched_key.starts_with("xai/"), 
+            "Expected xai/ prefix (original provider) but got: {}. \
+             The lookup should prefer original providers over resellers.", 
+            result.matched_key
+        );
+        assert_eq!(
+            result.matched_key, 
+            "xai/grok-code-fast-1-0825",
+            "Should match the xai/grok-code-fast-1-0825 entry, not azure_ai/grok-code-fast-1"
+        );
+        
+        // Verify we got the lower price (original provider)
+        let pricing = &result.pricing;
+        assert!(
+            pricing.input_cost_per_token.unwrap() < 0.000001,
+            "Input cost should be ~$0.20/1M (0.0000002), not ~$3.50/1M (reseller price)"
+        );
+        assert!(
+            pricing.output_cost_per_token.unwrap() < 0.000005,
+            "Output cost should be ~$1.50/1M (0.0000015), not ~$17.50/1M (reseller price)"
+        );
+    }
+    
     #[test]
     fn test_provider_preference_gemini_prefers_google_over_vertex() {
         let lookup = create_lookup();
