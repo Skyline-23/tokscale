@@ -1,5 +1,6 @@
 use super::{aliases, litellm::ModelPricing};
 use std::collections::HashMap;
+use std::sync::RwLock;
 
 const PROVIDER_PREFIXES: &[&str] = &[
     "openai/", "anthropic/", "google/", "meta-llama/", "mistralai/", 
@@ -25,11 +26,22 @@ const MIN_FUZZY_MATCH_LEN: usize = 5;
 /// Note: OpenCode Zen uses -xhigh suffix for extra-high quality tier
 const TIER_SUFFIXES: &[&str] = &["-xhigh", "-low", "-high", "-medium", "-free", ":low", ":high", ":medium", ":free"];
 
+#[derive(Clone)]
+struct CachedResult {
+    pricing: ModelPricing,
+    source: String,
+    matched_key: String,
+}
+
 pub struct PricingLookup {
     litellm: HashMap<String, ModelPricing>,
     openrouter: HashMap<String, ModelPricing>,
     litellm_keys: Vec<String>,
     openrouter_keys: Vec<String>,
+    litellm_lower: HashMap<String, String>,
+    openrouter_lower: HashMap<String, String>,
+    openrouter_model_part: HashMap<String, String>,
+    lookup_cache: RwLock<HashMap<String, Option<CachedResult>>>,
 }
 
 pub struct LookupResult {
@@ -46,11 +58,55 @@ impl PricingLookup {
         let mut openrouter_keys: Vec<String> = openrouter.keys().cloned().collect();
         openrouter_keys.sort_by(|a, b| b.len().cmp(&a.len()));
         
-        Self { litellm, openrouter, litellm_keys, openrouter_keys }
+        let mut litellm_lower = HashMap::with_capacity(litellm.len());
+        for key in &litellm_keys {
+            litellm_lower.insert(key.to_lowercase(), key.clone());
+        }
+        
+        let mut openrouter_lower = HashMap::with_capacity(openrouter.len());
+        let mut openrouter_model_part = HashMap::with_capacity(openrouter.len());
+        for key in &openrouter_keys {
+            let lower = key.to_lowercase();
+            openrouter_lower.insert(lower.clone(), key.clone());
+            if let Some(model_part) = lower.split('/').last() {
+                if model_part != lower {
+                    openrouter_model_part.insert(model_part.to_string(), key.clone());
+                }
+            }
+        }
+        
+        Self { 
+            litellm, 
+            openrouter, 
+            litellm_keys, 
+            openrouter_keys,
+            litellm_lower,
+            openrouter_lower,
+            openrouter_model_part,
+            lookup_cache: RwLock::new(HashMap::with_capacity(64)),
+        }
     }
     
     pub fn lookup(&self, model_id: &str) -> Option<LookupResult> {
-        self.lookup_with_source(model_id, None)
+        if let Some(cached) = self.lookup_cache.read().ok().and_then(|c| c.get(model_id).cloned()) {
+            return cached.map(|c| LookupResult {
+                pricing: c.pricing,
+                source: c.source,
+                matched_key: c.matched_key,
+            });
+        }
+        
+        let result = self.lookup_with_source(model_id, None);
+        
+        if let Ok(mut cache) = self.lookup_cache.write() {
+            cache.insert(model_id.to_string(), result.as_ref().map(|r| CachedResult {
+                pricing: r.pricing.clone(),
+                source: r.source.clone(),
+                matched_key: r.matched_key.clone(),
+            }));
+        }
+        
+        result
     }
     
     pub fn lookup_with_source(&self, model_id: &str, force_source: Option<&str>) -> Option<LookupResult> {
@@ -216,35 +272,30 @@ impl PricingLookup {
     }
     
     fn exact_match_litellm(&self, model_id: &str) -> Option<LookupResult> {
-        for key in &self.litellm_keys {
-            if key.eq_ignore_ascii_case(model_id) {
-                return Some(LookupResult {
-                    pricing: self.litellm.get(key).unwrap().clone(),
-                    source: "LiteLLM".into(),
-                    matched_key: key.clone(),
-                });
-            }
+        if let Some(key) = self.litellm_lower.get(model_id) {
+            return Some(LookupResult {
+                pricing: self.litellm.get(key).unwrap().clone(),
+                source: "LiteLLM".into(),
+                matched_key: key.clone(),
+            });
         }
         None
     }
     
     fn exact_match_openrouter(&self, model_id: &str) -> Option<LookupResult> {
-        for key in &self.openrouter_keys {
-            if key.eq_ignore_ascii_case(model_id) {
-                return Some(LookupResult {
-                    pricing: self.openrouter.get(key).unwrap().clone(),
-                    source: "OpenRouter".into(),
-                    matched_key: key.clone(),
-                });
-            }
-            let model_part = key.split('/').last().unwrap_or(key);
-            if model_part.eq_ignore_ascii_case(model_id) {
-                return Some(LookupResult {
-                    pricing: self.openrouter.get(key).unwrap().clone(),
-                    source: "OpenRouter".into(),
-                    matched_key: key.clone(),
-                });
-            }
+        if let Some(key) = self.openrouter_lower.get(model_id) {
+            return Some(LookupResult {
+                pricing: self.openrouter.get(key).unwrap().clone(),
+                source: "OpenRouter".into(),
+                matched_key: key.clone(),
+            });
+        }
+        if let Some(key) = self.openrouter_model_part.get(model_id) {
+            return Some(LookupResult {
+                pricing: self.openrouter.get(key).unwrap().clone(),
+                source: "OpenRouter".into(),
+                matched_key: key.clone(),
+            });
         }
         None
     }
@@ -252,14 +303,12 @@ impl PricingLookup {
     fn prefix_match_litellm(&self, model_id: &str) -> Option<LookupResult> {
         for prefix in PROVIDER_PREFIXES {
             let key = format!("{}{}", prefix, model_id);
-            for litellm_key in &self.litellm_keys {
-                if litellm_key.eq_ignore_ascii_case(&key) {
-                    return Some(LookupResult {
-                        pricing: self.litellm.get(litellm_key).unwrap().clone(),
-                        source: "LiteLLM".into(),
-                        matched_key: litellm_key.clone(),
-                    });
-                }
+            if let Some(litellm_key) = self.litellm_lower.get(&key) {
+                return Some(LookupResult {
+                    pricing: self.litellm.get(litellm_key).unwrap().clone(),
+                    source: "LiteLLM".into(),
+                    matched_key: litellm_key.clone(),
+                });
             }
         }
         None
@@ -268,14 +317,12 @@ impl PricingLookup {
     fn prefix_match_openrouter(&self, model_id: &str) -> Option<LookupResult> {
         for prefix in PROVIDER_PREFIXES {
             let key = format!("{}{}", prefix, model_id);
-            for or_key in &self.openrouter_keys {
-                if or_key.eq_ignore_ascii_case(&key) {
-                    return Some(LookupResult {
-                        pricing: self.openrouter.get(or_key).unwrap().clone(),
-                        source: "OpenRouter".into(),
-                        matched_key: or_key.clone(),
-                    });
-                }
+            if let Some(or_key) = self.openrouter_lower.get(&key) {
+                return Some(LookupResult {
+                    pricing: self.openrouter.get(or_key).unwrap().clone(),
+                    source: "OpenRouter".into(),
+                    matched_key: or_key.clone(),
+                });
             }
         }
         None
