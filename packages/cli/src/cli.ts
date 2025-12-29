@@ -547,7 +547,8 @@ interface LoadedDataSources {
 
 async function loadDataSourcesParallel(
   localSources: SourceType[],
-  dateFilters: { since?: string; until?: string; year?: string }
+  dateFilters: { since?: string; until?: string; year?: string },
+  onPhase?: (phase: string) => void
 ): Promise<LoadedDataSources> {
   const shouldParseLocal = localSources.length > 0;
 
@@ -571,6 +572,7 @@ async function loadDataSourcesParallel(
     ? localResult.value
     : null;
 
+  onPhase?.(pc.gray("Loading pricing data..."));
   const fetcher = await fetchPricingForMessages(localMessages);
 
   return { fetcher, cursorSync, localMessages };
@@ -603,20 +605,20 @@ async function showModelReport(options: FilterOptions & DateFilterOptions & { be
   }
   console.log();
 
-  // Start spinner for loading phase (unless disabled for AI agents)
   const useSpinner = extraOptions?.spinner !== false;
   const spinner = useSpinner ? createSpinner({ color: "cyan" }) : null;
-  spinner?.start(pc.gray("Loading data sources..."));
 
-  // Filter out cursor for local parsing (it's synced separately via network)
   const localSources: SourceType[] = (enabledSources || ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'amp', 'droid'])
     .filter(s => s !== 'cursor');
 
-  // Two-phase parallel loading: network (Cursor + pricing) overlaps with local file parsing
-  // If cursor-only, skip local parsing entirely
+  const hasCursorAuth = includeCursor && loadCursorCredentials();
+  const initialPhase = hasCursorAuth ? "Syncing Cursor data..." : "Parsing session files...";
+  spinner?.start(pc.gray(initialPhase));
+
   const { fetcher, cursorSync, localMessages } = await loadDataSourcesParallel(
     onlyCursor ? [] : localSources,
-    dateFilters
+    dateFilters,
+    (phase) => spinner?.update(phase)
   );
   
   if (!localMessages && !onlyCursor) {
@@ -731,20 +733,24 @@ async function showMonthlyReport(options: FilterOptions & DateFilterOptions & { 
   }
   console.log();
 
-  // Start spinner for loading phase (unless disabled for AI agents)
   const useSpinner = extraOptions?.spinner !== false;
   const spinner = useSpinner ? createSpinner({ color: "cyan" }) : null;
-  spinner?.start(pc.gray("Loading data sources..."));
 
   const dateFilters = getDateFilters(options);
   const enabledSources = getEnabledSources(options);
-  // Filter out cursor for local parsing (it's synced separately via network)
   const localSources: SourceType[] = (enabledSources || ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'amp', 'droid'])
     .filter(s => s !== 'cursor');
   const includeCursor = !enabledSources || enabledSources.includes('cursor');
 
-  // Two-phase parallel loading: network (Cursor + pricing) overlaps with local file parsing
-  const { fetcher, cursorSync, localMessages } = await loadDataSourcesParallel(localSources, dateFilters);
+  const hasCursorAuth = includeCursor && loadCursorCredentials();
+  const initialPhase = hasCursorAuth ? "Syncing Cursor data..." : "Parsing session files...";
+  spinner?.start(pc.gray(initialPhase));
+
+  const { fetcher, cursorSync, localMessages } = await loadDataSourcesParallel(
+    localSources,
+    dateFilters,
+    (phase) => spinner?.update(phase)
+  );
   
   if (!localMessages) {
     if (spinner) {
@@ -884,20 +890,24 @@ interface GraphCommandOptions extends FilterOptions, DateFilterOptions {
 }
 
 async function handleGraphCommand(options: GraphCommandOptions) {
-  // Start spinner for loading phase (only if outputting to file, not stdout, and not disabled)
   const useSpinner = options.output && options.spinner !== false;
   const spinner = useSpinner ? createSpinner({ color: "cyan" }) : null;
-  spinner?.start(pc.gray("Loading data sources..."));
 
   const dateFilters = getDateFilters(options);
   const enabledSources = getEnabledSources(options);
-  // Filter out cursor for local parsing (it's synced separately via network)
   const localSources: SourceType[] = (enabledSources || ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'amp', 'droid'])
     .filter(s => s !== 'cursor');
   const includeCursor = !enabledSources || enabledSources.includes('cursor');
 
-  // Two-phase parallel loading: network (Cursor + pricing) overlaps with local file parsing
-  const { fetcher, cursorSync, localMessages } = await loadDataSourcesParallel(localSources, dateFilters);
+  const hasCursorAuth = includeCursor && loadCursorCredentials();
+  const initialPhase = hasCursorAuth ? "Syncing Cursor data..." : "Parsing session files...";
+  spinner?.start(pc.gray(initialPhase));
+
+  const { fetcher, cursorSync, localMessages } = await loadDataSourcesParallel(
+    localSources,
+    dateFilters,
+    (phase) => spinner?.update(phase)
+  );
   
   if (!localMessages) {
     spinner?.error('Failed to parse local session files');
