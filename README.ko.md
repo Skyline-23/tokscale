@@ -224,6 +224,46 @@ tokscale monthly --month --benchmark
 
 > **참고**: 날짜 필터는 로컬 타임존을 사용합니다. `--since`와 `--until` 모두 해당 날짜를 포함합니다.
 
+### 가격 조회
+
+모든 모델의 실시간 가격을 조회합니다:
+
+```bash
+# 모델 가격 조회
+tokscale pricing "claude-3-5-sonnet-20241022"
+tokscale pricing "gpt-4o"
+tokscale pricing "grok-code"
+
+# 특정 프로바이더 소스 강제 지정
+tokscale pricing "grok-code" --provider openrouter
+tokscale pricing "claude-3-5-sonnet" --provider litellm
+```
+
+**조회 전략:**
+
+가격 조회는 다단계 해석 전략을 사용합니다:
+
+1. **정확한 일치** - LiteLLM/OpenRouter 데이터베이스에서 직접 조회
+2. **별칭 해석** - 친숙한 이름 해석 (예: `big-pickle` → `glm-4.7`)
+3. **티어 접미사 제거** - 품질 티어 제거 (`gpt-5.2-xhigh` → `gpt-5.2`)
+4. **버전 정규화** - 버전 형식 처리 (`claude-3-5-sonnet` ↔ `claude-3.5-sonnet`)
+5. **프로바이더 접두사 매칭** - 일반 접두사 시도 (`anthropic/`, `openai/` 등)
+6. **퍼지 매칭** - 부분 모델 이름에 대한 단어 경계 매칭
+
+**프로바이더 우선순위:**
+
+여러 일치 항목이 있을 때 원본 모델 제작사가 리셀러보다 우선됩니다:
+
+| 우선 (원본) | 후순위 (리셀러) |
+|---------------------|-------------------------|
+| `xai/` (Grok) | `azure_ai/` |
+| `anthropic/` (Claude) | `bedrock/` |
+| `openai/` (GPT) | `vertex_ai/` |
+| `google/` (Gemini) | `together_ai/` |
+| `meta-llama/` | `fireworks_ai/` |
+
+예시: `grok-code`는 `azure_ai/grok-code-fast-1` ($3.50/$17.50) 대신 `xai/grok-code-fast-1` ($0.20/$1.50)와 일치합니다.
+
 ### 소셜 플랫폼 명령어
 
 ```bash

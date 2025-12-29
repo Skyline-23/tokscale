@@ -225,6 +225,46 @@ tokscale monthly --month --benchmark
 
 > **注**: 日付フィルターはローカルタイムゾーンを使用します。`--since`と`--until`は両方とも包括的です。
 
+### 価格検索
+
+任意のモデルのリアルタイム価格を検索します：
+
+```bash
+# モデル価格を検索
+tokscale pricing "claude-3-5-sonnet-20241022"
+tokscale pricing "gpt-4o"
+tokscale pricing "grok-code"
+
+# 特定のプロバイダーソースを強制
+tokscale pricing "grok-code" --provider openrouter
+tokscale pricing "claude-3-5-sonnet" --provider litellm
+```
+
+**検索戦略：**
+
+価格検索は多段階の解決戦略を使用します：
+
+1. **完全一致** - LiteLLM/OpenRouterデータベースでの直接検索
+2. **エイリアス解決** - 親しみやすい名前を解決（例：`big-pickle` → `glm-4.7`）
+3. **ティアサフィックス除去** - 品質ティアを削除（`gpt-5.2-xhigh` → `gpt-5.2`）
+4. **バージョン正規化** - バージョン形式を処理（`claude-3-5-sonnet` ↔ `claude-3.5-sonnet`）
+5. **プロバイダープレフィックスマッチング** - 一般的なプレフィックスを試行（`anthropic/`、`openai/`など）
+6. **ファジーマッチング** - 部分モデル名の単語境界マッチング
+
+**プロバイダー優先順位：**
+
+複数のマッチがある場合、オリジナルモデル作成者がリセラーより優先されます：
+
+| 優先（オリジナル） | 非優先（リセラー） |
+|---------------------|-------------------------|
+| `xai/`（Grok） | `azure_ai/` |
+| `anthropic/`（Claude） | `bedrock/` |
+| `openai/`（GPT） | `vertex_ai/` |
+| `google/`（Gemini） | `together_ai/` |
+| `meta-llama/` | `fireworks_ai/` |
+
+例：`grok-code`は`azure_ai/grok-code-fast-1`（$3.50/$17.50）ではなく`xai/grok-code-fast-1`（$0.20/$1.50）にマッチします。
+
 ### ソーシャルプラットフォームコマンド
 
 ```bash

@@ -225,6 +225,46 @@ tokscale monthly --month --benchmark
 
 > **注意**：日期筛选器使用本地时区。`--since` 和 `--until` 都是包含的。
 
+### 价格查询
+
+查询任何模型的实时价格：
+
+```bash
+# 查询模型价格
+tokscale pricing "claude-3-5-sonnet-20241022"
+tokscale pricing "gpt-4o"
+tokscale pricing "grok-code"
+
+# 强制指定提供商来源
+tokscale pricing "grok-code" --provider openrouter
+tokscale pricing "claude-3-5-sonnet" --provider litellm
+```
+
+**查询策略：**
+
+价格查询使用多步解析策略：
+
+1. **精确匹配** - 在 LiteLLM/OpenRouter 数据库中直接查找
+2. **别名解析** - 解析友好名称（例如：`big-pickle` → `glm-4.7`）
+3. **层级后缀剥离** - 移除质量层级（`gpt-5.2-xhigh` → `gpt-5.2`）
+4. **版本标准化** - 处理版本格式（`claude-3-5-sonnet` ↔ `claude-3.5-sonnet`）
+5. **提供商前缀匹配** - 尝试常见前缀（`anthropic/`、`openai/` 等）
+6. **模糊匹配** - 部分模型名称的词边界匹配
+
+**提供商优先级：**
+
+当存在多个匹配时，原始模型创建者优先于经销商：
+
+| 优先（原创） | 次优先（经销商） |
+|---------------------|-------------------------|
+| `xai/`（Grok） | `azure_ai/` |
+| `anthropic/`（Claude） | `bedrock/` |
+| `openai/`（GPT） | `vertex_ai/` |
+| `google/`（Gemini） | `together_ai/` |
+| `meta-llama/` | `fireworks_ai/` |
+
+示例：`grok-code` 匹配 `xai/grok-code-fast-1`（$0.20/$1.50）而非 `azure_ai/grok-code-fast-1`（$3.50/$17.50）。
+
 ### 社交平台命令
 
 ```bash
