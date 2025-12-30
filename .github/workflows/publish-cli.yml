@@ -1,12 +1,6 @@
 name: Publish
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/core/package.json"
-      - "packages/cli/package.json"
-      - "packages/tokscale/package.json"
   workflow_dispatch:
 
 env:
@@ -15,8 +9,67 @@ env:
   MACOSX_DEPLOYMENT_TARGET: "10.13"
 
 jobs:
+  bump-versions:
+    name: Bump versions
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          # Read current version
+          CURRENT_VERSION=$(jq -r '.version' packages/core/package.json)
+          echo "📦 Current version: $CURRENT_VERSION"
+          
+          # Calculate new version (increment patch)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+          echo "🚀 New version: $NEW_VERSION"
+          
+          # Update packages/core/package.json
+          jq --arg v "$NEW_VERSION" '.version = $v' packages/core/package.json > tmp.json && mv tmp.json packages/core/package.json
+          echo "✅ Updated packages/core/package.json"
+          
+          # Update packages/cli/package.json (version + @tokscale/core dependency)
+          jq --arg v "$NEW_VERSION" '.version = $v | .dependencies["@tokscale/core"] = $v' packages/cli/package.json > tmp.json && mv tmp.json packages/cli/package.json
+          echo "✅ Updated packages/cli/package.json"
+          
+          # Update packages/tokscale/package.json (version + @tokscale/cli dependency)
+          jq --arg v "$NEW_VERSION" '.version = $v | .dependencies["@tokscale/cli"] = $v' packages/tokscale/package.json > tmp.json && mv tmp.json packages/tokscale/package.json
+          echo "✅ Updated packages/tokscale/package.json"
+          
+          # Verify all versions are updated
+          echo ""
+          echo "📋 Verification:"
+          echo "  @tokscale/core:  $(jq -r '.version' packages/core/package.json)"
+          echo "  @tokscale/cli:   $(jq -r '.version' packages/cli/package.json)"
+          echo "  tokscale:        $(jq -r '.version' packages/tokscale/package.json)"
+          echo "  cli -> core dep: $(jq -r '.dependencies["@tokscale/core"]' packages/cli/package.json)"
+          echo "  tokscale -> cli: $(jq -r '.dependencies["@tokscale/cli"]' packages/tokscale/package.json)"
+          
+          # Commit and push
+          git add packages/core/package.json packages/cli/package.json packages/tokscale/package.json
+          git commit -m "chore: bump version to $NEW_VERSION"
+          git push
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Committed and pushed version bump to $NEW_VERSION"
+
   check-versions:
     name: Check version changes
+    needs: [bump-versions]
     runs-on: ubuntu-latest
     outputs:
       should-publish: ${{ steps.check.outputs.should-publish }}
@@ -24,12 +77,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}
           fetch-depth: 2
 
       - name: Check version sync and changes
         id: check
-        env:
-          IS_MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           CORE_VERSION=$(jq -r '.version' packages/core/package.json)
           CLI_VERSION=$(jq -r '.version' packages/cli/package.json)
@@ -49,22 +101,9 @@ jobs:
           
           echo "version=$CORE_VERSION" >> $GITHUB_OUTPUT
           
-          if [ "$IS_MANUAL" = "true" ]; then
-            echo "🚀 Manual trigger - publishing all packages"
-            echo "should-publish=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Check if version changed from previous commit
-          PREV_VERSION=$(git show HEAD~1:packages/core/package.json 2>/dev/null | jq -r '.version' 2>/dev/null || echo "")
-          
-          if [ "$CORE_VERSION" != "$PREV_VERSION" ]; then
-            echo "✅ Version changed: $PREV_VERSION → $CORE_VERSION"
-            echo "should-publish=true" >> $GITHUB_OUTPUT
-          else
-            echo "⏭️ No version change ($CORE_VERSION)"
-            echo "should-publish=false" >> $GITHUB_OUTPUT
-          fi
+          # Manual trigger with version bump - always publish
+          echo "🚀 Manual trigger with version bump - publishing all packages"
+          echo "should-publish=true" >> $GITHUB_OUTPUT
 
   build:
     name: Build - ${{ matrix.settings.target }}
@@ -120,6 +159,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -179,6 +220,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -215,6 +258,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -243,6 +288,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
