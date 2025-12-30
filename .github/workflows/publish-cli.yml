@@ -128,8 +128,8 @@ jobs:
           path: packages/
 
       - name: Restore package.json structure
+        shell: bash
         run: |
-          # The artifact preserves the directory structure, move files to correct locations
           mv packages/core/package.json packages/core/package.json 2>/dev/null || true
           mv packages/cli/package.json packages/cli/package.json 2>/dev/null || true
           mv packages/tokscale/package.json packages/tokscale/package.json 2>/dev/null || true
