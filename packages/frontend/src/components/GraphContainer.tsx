@@ -94,9 +94,9 @@ export function GraphContainer({ data }: GraphContainerProps) {
 
   useEffect(() => {
     if (!initializedRef.current && yearContributions.length > 0) {
-      const activeDaysWithCost = yearContributions.filter((c) => c.totals.cost > 0);
-      if (activeDaysWithCost.length > 0) {
-        const latestDay = activeDaysWithCost[activeDaysWithCost.length - 1];
+      const activeDaysWithTokens = yearContributions.filter((c) => c.totals.tokens > 0);
+      if (activeDaysWithTokens.length > 0) {
+        const latestDay = activeDaysWithTokens[activeDaysWithTokens.length - 1];
         // Intentional one-time initialization on first data load
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedDay(latestDay);
