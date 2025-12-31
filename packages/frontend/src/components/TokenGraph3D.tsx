@@ -221,7 +221,7 @@ export function TokenGraph3D({
         pixelView.renderObject(cube, p3d);
       }
     }
-  }, [obeliskLoaded, contributions, palette, year, maxTokens, weeksData]);
+  }, [obeliskLoaded, contributions, palette, year, maxTokens, weeksData, isDark]);
 
   const getDayAtPosition = useCallback(
     (clientX: number, clientY: number): { day: DailyContribution | null; position: TooltipPosition } | null => {
