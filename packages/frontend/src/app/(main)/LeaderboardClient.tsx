@@ -170,26 +170,9 @@ const TableRow = styled.tr<{ $isCurrentUser?: boolean }>`
   }
 
   ${props => props.$isCurrentUser && `
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: #0073FF;
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border: 2px solid #0073FF;
-      border-radius: 4px;
-      pointer-events: none;
-    }
-
     background: rgba(0, 115, 255, 0.05);
+    box-shadow: inset 4px 0 0 #0073FF, inset 0 0 0 2px #0073FF;
+    border-radius: 4px;
   `}
 `;
 
