@@ -657,6 +657,34 @@ fn is_fuzzy_eligible(model_id: &str) -> bool {
     !FUZZY_BLOCKLIST.iter().any(|blocked| model_id == *blocked)
 }
 
+/// Attempts to find a model by progressively stripping trailing segments.
+/// Handles arbitrary suffixes (e.g., "claude-sonnet-4-5-thinking" → "claude-sonnet-4-5").
+/// This replaces the hardcoded TIER_SUFFIXES and FALLBACK_SUFFIXES approach.
+fn try_strip_unknown_suffix<F>(model_id: &str, do_lookup: F) -> Option<LookupResult>
+where
+    F: Fn(&str) -> Option<LookupResult>,
+{
+    let parts: Vec<&str> = model_id.split('-').collect();
+
+    if parts.len() < 2 {
+        return None;
+    }
+
+    let max_strip = std::cmp::min(parts.len() - 1, MAX_SUFFIX_STRIP_SEGMENTS);
+
+    for strip in 1..=max_strip {
+        let candidate: String = parts[..parts.len() - strip].join("-");
+
+        if candidate.len() >= MIN_MODEL_NAME_LEN {
+            if let Some(result) = do_lookup(&candidate) {
+                return Some(result);
+            }
+        }
+    }
+
+    None
+}
+
 fn strip_tier_suffix(model_id: &str) -> Option<&str> {
     for suffix in TIER_SUFFIXES {
         if model_id.ends_with(suffix) {
