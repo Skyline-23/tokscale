@@ -685,6 +685,40 @@ where
     None
 }
 
+/// Attempts to find a model by progressively stripping leading segments.
+/// Handles arbitrary routing prefixes (e.g., "myplugin-claude-3.5-sonnet" → "claude-3.5-sonnet").
+/// This replaces the hardcoded STRIPPED_PREFIXES approach.
+fn try_strip_unknown_prefix<F>(model_id: &str, do_lookup: F) -> Option<LookupResult>
+where
+    F: Fn(&str) -> Option<LookupResult>,
+{
+    let parts: Vec<&str> = model_id.split('-').collect();
+
+    if parts.len() < 2 {
+        return None;
+    }
+
+    let max_skip = std::cmp::min(parts.len() - 1, MAX_PREFIX_STRIP_SEGMENTS);
+
+    for skip in 1..=max_skip {
+        let candidate: String = parts[skip..].join("-");
+
+        if candidate.len() >= MIN_MODEL_NAME_LEN {
+            // Try candidate directly
+            if let Some(result) = do_lookup(&candidate) {
+                return Some(result);
+            }
+
+            // Try candidate with suffix stripping
+            if let Some(result) = try_strip_unknown_suffix(&candidate, &do_lookup) {
+                return Some(result);
+            }
+        }
+    }
+
+    None
+}
+
 fn strip_tier_suffix(model_id: &str) -> Option<&str> {
     for suffix in TIER_SUFFIXES {
         if model_id.ends_with(suffix) {
