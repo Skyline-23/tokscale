@@ -59,23 +59,6 @@ const MAX_PREFIX_STRIP_SEGMENTS: usize = 2;
 /// Handles tier suffixes (-high, -low) and variant suffixes (-thinking, -codex, -codex-max-xhigh).
 const MAX_SUFFIX_STRIP_SEGMENTS: usize = 4;
 
-/// Quality/speed tier suffixes that should be stripped for pricing lookup
-/// These indicate provider-specific routing but don't affect the base model pricing
-/// Note: OpenCode Zen uses -xhigh suffix for extra-high quality tier
-const TIER_SUFFIXES: &[&str] = &[
-    "-xhigh", "-low", "-high", "-medium", "-free", ":low", ":high", ":medium", ":free",
-];
-
-/// Routing/quota prefixes that should be stripped for pricing lookup.
-/// These indicate third-party routing systems (e.g., antigravity-auth plugin) but don't affect base model pricing.
-/// Configurable: Add new prefixes here as they emerge from community plugins.
-const STRIPPED_PREFIXES: &[&str] = &["antigravity-"];
-
-/// Model variant suffixes that can be stripped as a fallback when pricing isn't found.
-/// These represent model variants that typically share pricing with their base model.
-/// Order matters: suffixes are tried in order, and only the first match is used.
-const FALLBACK_SUFFIXES: &[&str] = &["-codex", "-codex-max"];
-
 #[derive(Clone)]
 struct CachedResult {
     pricing: ModelPricing,
@@ -175,8 +158,7 @@ impl PricingLookup {
         model_id: &str,
         force_source: Option<&str>,
     ) -> Option<LookupResult> {
-        let prefix_stripped = strip_routing_prefix(model_id);
-        let canonical = aliases::resolve_alias(prefix_stripped).unwrap_or(prefix_stripped);
+        let canonical = aliases::resolve_alias(model_id).unwrap_or(model_id);
         let lower = canonical.to_lowercase();
 
         // Helper to perform lookup with the given source constraint
@@ -186,35 +168,20 @@ impl PricingLookup {
             _ => self.lookup_auto(id),
         };
 
-        // Try direct lookup
+        // 1. Try direct lookup
         if let Some(result) = do_lookup(&lower) {
             return Some(result);
         }
 
-        // Try stripping tier suffix (e.g., -high, -low)
-        if let Some(tier_stripped) = strip_tier_suffix(&lower) {
-            if let Some(result) = do_lookup(tier_stripped) {
-                return Some(result);
-            }
-            // Try fallback suffix on the tier-stripped version (e.g., gpt-5-codex-high -> gpt-5-codex -> gpt-5)
-            if let Some(fallback_stripped) = strip_fallback_suffix(tier_stripped) {
-                if let Some(result) = do_lookup(fallback_stripped) {
-                    return Some(result);
-                }
-            }
+        // 2. Try stripping unknown suffixes (e.g., -thinking, -high, -codex)
+        if let Some(result) = try_strip_unknown_suffix(&lower, do_lookup) {
+            return Some(result);
         }
 
-        // Try stripping fallback suffixes (e.g., -codex variants falling back to base model)
-        if let Some(fallback_stripped) = strip_fallback_suffix(&lower) {
-            if let Some(result) = do_lookup(fallback_stripped) {
-                return Some(result);
-            }
-            // Also try tier suffix on the fallback-stripped version
-            if let Some(tier_stripped) = strip_tier_suffix(fallback_stripped) {
-                if let Some(result) = do_lookup(tier_stripped) {
-                    return Some(result);
-                }
-            }
+        // 3. Try stripping unknown prefixes (e.g., antigravity-, myplugin-)
+        //    For each prefix candidate, also try suffix stripping
+        if let Some(result) = try_strip_unknown_prefix(&lower, do_lookup) {
+            return Some(result);
         }
 
         None
@@ -717,42 +684,6 @@ where
     }
 
     None
-}
-
-fn strip_tier_suffix(model_id: &str) -> Option<&str> {
-    for suffix in TIER_SUFFIXES {
-        if model_id.ends_with(suffix) {
-            return Some(&model_id[..model_id.len() - suffix.len()]);
-        }
-    }
-    None
-}
-
-/// Strips fallback suffixes from model IDs for pricing lookup.
-/// Returns the base model ID if a fallback suffix is found, None otherwise.
-/// Longer suffixes are checked first to handle cases like "-codex-max" before "-codex".
-fn strip_fallback_suffix(model_id: &str) -> Option<&str> {
-    // FALLBACK_SUFFIXES should be ordered with longer suffixes first,
-    // but we sort by length descending to be safe
-    let mut suffixes: Vec<&str> = FALLBACK_SUFFIXES.to_vec();
-    suffixes.sort_by(|a, b| b.len().cmp(&a.len()));
-
-    for suffix in suffixes {
-        if model_id.ends_with(suffix) {
-            return Some(&model_id[..model_id.len() - suffix.len()]);
-        }
-    }
-    None
-}
-
-fn strip_routing_prefix(model_id: &str) -> &str {
-    let lower = model_id.to_lowercase();
-    for prefix in STRIPPED_PREFIXES {
-        if lower.starts_with(prefix) {
-            return &model_id[prefix.len()..];
-        }
-    }
-    model_id
 }
 
 fn is_original_provider(key: &str) -> bool {
