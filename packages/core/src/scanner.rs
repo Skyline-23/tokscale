@@ -121,6 +121,9 @@ pub fn scan_all_sources(home_dir: &str, sources: &[String]) -> ScanResult {
     let include_amp = include_all || sources.iter().any(|s| s == "amp");
     let include_droid = include_all || sources.iter().any(|s| s == "droid");
 
+    let headless_root = std::env::var("TOKSCALE_HEADLESS_DIR")
+        .unwrap_or_else(|_| format!("{}/.config/tokscale/headless", home_dir));
+
     // Define scan tasks
     let mut tasks: Vec<(SessionType, String, &str)> = Vec::new();
 
@@ -136,6 +139,11 @@ pub fn scan_all_sources(home_dir: &str, sources: &[String]) -> ScanResult {
         // Claude: ~/.claude/projects/**/*.jsonl
         let claude_path = format!("{}/.claude/projects", home_dir);
         tasks.push((SessionType::Claude, claude_path, "*.jsonl"));
+
+        // Claude headless: ~/.config/tokscale/headless/claude/*.{json,jsonl}
+        let claude_headless_path = format!("{}/claude", headless_root);
+        tasks.push((SessionType::Claude, claude_headless_path.clone(), "*.jsonl"));
+        tasks.push((SessionType::Claude, claude_headless_path, "*.json"));
     }
 
     if include_codex {
@@ -144,12 +152,21 @@ pub fn scan_all_sources(home_dir: &str, sources: &[String]) -> ScanResult {
             std::env::var("CODEX_HOME").unwrap_or_else(|_| format!("{}/.codex", home_dir));
         let codex_path = format!("{}/sessions", codex_home);
         tasks.push((SessionType::Codex, codex_path, "*.jsonl"));
+
+        // Codex headless: ~/.config/tokscale/headless/codex/*.jsonl
+        let codex_headless_path = format!("{}/codex", headless_root);
+        tasks.push((SessionType::Codex, codex_headless_path, "*.jsonl"));
     }
 
     if include_gemini {
         // Gemini: ~/.gemini/tmp/*/chats/session-*.json
         let gemini_path = format!("{}/.gemini/tmp", home_dir);
         tasks.push((SessionType::Gemini, gemini_path, "session-*.json"));
+
+        // Gemini headless: ~/.config/tokscale/headless/gemini/*.{json,jsonl}
+        let gemini_headless_path = format!("{}/gemini", headless_root);
+        tasks.push((SessionType::Gemini, gemini_headless_path.clone(), "*.jsonl"));
+        tasks.push((SessionType::Gemini, gemini_headless_path, "*.json"));
     }
 
     if include_cursor {
@@ -184,13 +201,13 @@ pub fn scan_all_sources(home_dir: &str, sources: &[String]) -> ScanResult {
     // Aggregate results
     for (session_type, files) in scan_results {
         match session_type {
-            SessionType::OpenCode => result.opencode_files = files,
-            SessionType::Claude => result.claude_files = files,
-            SessionType::Codex => result.codex_files = files,
-            SessionType::Gemini => result.gemini_files = files,
-            SessionType::Cursor => result.cursor_files = files,
-            SessionType::Amp => result.amp_files = files,
-            SessionType::Droid => result.droid_files = files,
+            SessionType::OpenCode => result.opencode_files.extend(files),
+            SessionType::Claude => result.claude_files.extend(files),
+            SessionType::Codex => result.codex_files.extend(files),
+            SessionType::Gemini => result.gemini_files.extend(files),
+            SessionType::Cursor => result.cursor_files.extend(files),
+            SessionType::Amp => result.amp_files.extend(files),
+            SessionType::Droid => result.droid_files.extend(files),
         }
     }
 
