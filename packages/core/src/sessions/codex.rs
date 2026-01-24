@@ -3,9 +3,13 @@
 //! Parses JSONL files from ~/.codex/sessions/
 //! Note: This parser has stateful logic to track model and delta calculations.
 
+use super::utils::{
+    extract_i64, extract_string, file_modified_timestamp_ms, parse_timestamp_value,
+};
 use super::UnifiedMessage;
 use crate::TokenBreakdown;
 use serde::Deserialize;
+use serde_json::Value;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
@@ -56,6 +60,8 @@ pub fn parse_codex_file(path: &Path) -> Vec<UnifiedMessage> {
         .unwrap_or("unknown")
         .to_string();
 
+    let fallback_timestamp = file_modified_timestamp_ms(path);
+
     let reader = BufReader::new(file);
     let mut messages = Vec::new();
 
@@ -74,122 +80,128 @@ pub fn parse_codex_file(path: &Path) -> Vec<UnifiedMessage> {
             continue;
         }
 
+        let mut handled = false;
         let mut bytes = trimmed.as_bytes().to_vec();
-        let entry: CodexEntry = match simd_json::from_slice(&mut bytes) {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
+        if let Ok(entry) = simd_json::from_slice::<CodexEntry>(&mut bytes) {
+            if let Some(payload) = entry.payload {
+                // Extract model from turn_context
+                if entry.entry_type == "turn_context" {
+                    current_model = extract_model(&payload);
+                    handled = true;
+                }
 
-        let payload = match entry.payload {
-            Some(p) => p,
-            None => continue,
-        };
+                // Process token_count events
+                if entry.entry_type == "event_msg"
+                    && payload.payload_type.as_deref() == Some("token_count")
+                {
+                    // Try to extract model from payload
+                    if let Some(model) = extract_model(&payload) {
+                        current_model = Some(model);
+                    }
 
-        // Extract model from turn_context
-        if entry.entry_type == "turn_context" {
-            current_model = extract_model(&payload);
+                    let info = match payload.info {
+                        Some(i) => i,
+                        None => continue,
+                    };
+
+                    // Try to extract model from info
+                    if let Some(model) = info.model.clone().or(info.model_name.clone()) {
+                        current_model = Some(model);
+                    }
+
+                    let model = current_model
+                        .clone()
+                        .unwrap_or_else(|| "unknown".to_string());
+
+                    // Calculate delta tokens
+                    // Note: OpenAI's input_tokens INCLUDES cached tokens (they are a subset).
+                    // We subtract cached from input to avoid double-counting when aggregating.
+                    let (input, output, cached) = if let Some(last) = &info.last_token_usage {
+                        let total_input = last.input_tokens.unwrap_or(0);
+                        let cached = last
+                            .cached_input_tokens
+                            .or(last.cache_read_input_tokens)
+                            .unwrap_or(0);
+                        (
+                            total_input.saturating_sub(cached),
+                            last.output_tokens.unwrap_or(0),
+                            cached,
+                        )
+                    } else if let (Some(total), Some(prev)) = (&info.total_token_usage, &previous_totals)
+                    {
+                        let curr_input = total.input_tokens.unwrap_or(0);
+                        let curr_output = total.output_tokens.unwrap_or(0);
+                        let curr_cached = total
+                            .cached_input_tokens
+                            .or(total.cache_read_input_tokens)
+                            .unwrap_or(0);
+
+                        let delta_input = (curr_input - prev.0).max(0);
+                        let delta_cached = (curr_cached - prev.2).max(0);
+                        (
+                            (delta_input - delta_cached).max(0),
+                            (curr_output - prev.1).max(0),
+                            delta_cached,
+                        )
+                    } else {
+                        continue;
+                    };
+
+                    // Update previous totals
+                    if let Some(total) = &info.total_token_usage {
+                        previous_totals = Some((
+                            total.input_tokens.unwrap_or(0),
+                            total.output_tokens.unwrap_or(0),
+                            total
+                                .cached_input_tokens
+                                .or(total.cache_read_input_tokens)
+                                .unwrap_or(0),
+                        ));
+                    }
+
+                    // Skip empty deltas
+                    if input == 0 && output == 0 && cached == 0 {
+                        continue;
+                    }
+
+                    let timestamp = entry
+                        .timestamp
+                        .and_then(|ts| chrono::DateTime::parse_from_rfc3339(&ts).ok())
+                        .map(|dt| dt.timestamp_millis())
+                        .unwrap_or(fallback_timestamp);
+
+                    messages.push(UnifiedMessage::new(
+                        "codex",
+                        model,
+                        "openai",
+                        session_id.clone(),
+                        timestamp,
+                        TokenBreakdown {
+                            input,
+                            output,
+                            cache_read: cached,
+                            cache_write: 0,
+                            reasoning: 0,
+                        },
+                        0.0, // Cost calculated later
+                    ));
+                    handled = true;
+                }
+            }
+        }
+
+        if handled {
             continue;
         }
 
-        // Process token_count events
-        if entry.entry_type != "event_msg" {
-            continue;
+        if let Some(msg) = parse_codex_headless_line(
+            trimmed,
+            &session_id,
+            &mut current_model,
+            fallback_timestamp,
+        ) {
+            messages.push(msg);
         }
-
-        if payload.payload_type.as_deref() != Some("token_count") {
-            continue;
-        }
-
-        // Try to extract model from payload
-        if let Some(model) = extract_model(&payload) {
-            current_model = Some(model);
-        }
-
-        let info = match payload.info {
-            Some(i) => i,
-            None => continue,
-        };
-
-        // Try to extract model from info
-        if let Some(model) = info.model.clone().or(info.model_name.clone()) {
-            current_model = Some(model);
-        }
-
-        let model = current_model
-            .clone()
-            .unwrap_or_else(|| "unknown".to_string());
-
-        // Calculate delta tokens
-        // Note: OpenAI's input_tokens INCLUDES cached tokens (they are a subset).
-        // We subtract cached from input to avoid double-counting when aggregating.
-        let (input, output, cached) = if let Some(last) = &info.last_token_usage {
-            let total_input = last.input_tokens.unwrap_or(0);
-            let cached = last.cached_input_tokens
-                .or(last.cache_read_input_tokens)
-                .unwrap_or(0);
-            (
-                total_input.saturating_sub(cached),
-                last.output_tokens.unwrap_or(0),
-                cached,
-            )
-        } else if let (Some(total), Some(prev)) = (&info.total_token_usage, &previous_totals) {
-            let curr_input = total.input_tokens.unwrap_or(0);
-            let curr_output = total.output_tokens.unwrap_or(0);
-            let curr_cached = total
-                .cached_input_tokens
-                .or(total.cache_read_input_tokens)
-                .unwrap_or(0);
-
-            let delta_input = (curr_input - prev.0).max(0);
-            let delta_cached = (curr_cached - prev.2).max(0);
-            (
-                (delta_input - delta_cached).max(0),
-                (curr_output - prev.1).max(0),
-                delta_cached,
-            )
-        } else {
-            continue;
-        };
-
-        // Update previous totals
-        if let Some(total) = &info.total_token_usage {
-            previous_totals = Some((
-                total.input_tokens.unwrap_or(0),
-                total.output_tokens.unwrap_or(0),
-                total
-                    .cached_input_tokens
-                    .or(total.cache_read_input_tokens)
-                    .unwrap_or(0),
-            ));
-        }
-
-        // Skip empty deltas
-        if input == 0 && output == 0 && cached == 0 {
-            continue;
-        }
-
-        let timestamp = entry
-            .timestamp
-            .or(payload.payload_type.clone()) // fallback
-            .and_then(|ts| chrono::DateTime::parse_from_rfc3339(&ts).ok())
-            .map(|dt| dt.timestamp_millis())
-            .unwrap_or_else(|| chrono::Utc::now().timestamp_millis());
-
-        messages.push(UnifiedMessage::new(
-            "codex",
-            model,
-            "openai",
-            session_id.clone(),
-            timestamp,
-            TokenBreakdown {
-                input,
-                output,
-                cache_read: cached,
-                cache_write: 0,
-                reasoning: 0,
-            },
-            0.0, // Cost calculated later
-        ));
     }
 
     messages
@@ -203,4 +215,145 @@ fn extract_model(payload: &CodexPayload) -> Option<String> {
         .or(payload.info.as_ref().and_then(|i| i.model.clone()))
         .or(payload.info.as_ref().and_then(|i| i.model_name.clone()))
         .filter(|m| !m.is_empty())
+}
+
+struct CodexHeadlessUsage {
+    input: i64,
+    output: i64,
+    cached: i64,
+    model: Option<String>,
+    timestamp_ms: Option<i64>,
+}
+
+fn parse_codex_headless_line(
+    line: &str,
+    session_id: &str,
+    current_model: &mut Option<String>,
+    fallback_timestamp: i64,
+) -> Option<UnifiedMessage> {
+    let mut bytes = line.as_bytes().to_vec();
+    let value: Value = simd_json::from_slice(&mut bytes).ok()?;
+
+    if let Some(model) = extract_model_from_value(&value) {
+        *current_model = Some(model);
+    }
+
+    let usage = extract_headless_usage(&value)?;
+    let model = usage
+        .model
+        .or_else(|| current_model.clone())
+        .unwrap_or_else(|| "unknown".to_string());
+    let timestamp = usage.timestamp_ms.unwrap_or(fallback_timestamp);
+
+    if usage.input == 0 && usage.output == 0 && usage.cached == 0 {
+        return None;
+    }
+
+    Some(UnifiedMessage::new(
+        "codex",
+        model,
+        "openai",
+        session_id.to_string(),
+        timestamp,
+        TokenBreakdown {
+            input: usage.input,
+            output: usage.output,
+            cache_read: usage.cached,
+            cache_write: 0,
+            reasoning: 0,
+        },
+        0.0,
+    ))
+}
+
+fn extract_headless_usage(value: &Value) -> Option<CodexHeadlessUsage> {
+    let usage = value
+        .get("usage")
+        .or_else(|| value.get("data").and_then(|data| data.get("usage")))
+        .or_else(|| value.get("result").and_then(|data| data.get("usage")))
+        .or_else(|| value.get("response").and_then(|data| data.get("usage")))?;
+
+    let input_tokens = extract_i64(usage.get("input_tokens"))
+        .or_else(|| extract_i64(usage.get("prompt_tokens")))
+        .or_else(|| extract_i64(usage.get("input")))
+        .unwrap_or(0);
+    let output_tokens = extract_i64(usage.get("output_tokens"))
+        .or_else(|| extract_i64(usage.get("completion_tokens")))
+        .or_else(|| extract_i64(usage.get("output")))
+        .unwrap_or(0);
+    let cached_tokens = extract_i64(usage.get("cached_input_tokens"))
+        .or_else(|| extract_i64(usage.get("cache_read_input_tokens")))
+        .or_else(|| extract_i64(usage.get("cached_tokens")))
+        .unwrap_or(0);
+
+    let model = extract_model_from_value(value)
+        .or_else(|| value.get("data").and_then(extract_model_from_value));
+    let timestamp_ms = extract_timestamp_from_value(value);
+
+    Some(CodexHeadlessUsage {
+        input: input_tokens.saturating_sub(cached_tokens),
+        output: output_tokens,
+        cached: cached_tokens,
+        model,
+        timestamp_ms,
+    })
+}
+
+fn extract_model_from_value(value: &Value) -> Option<String> {
+    extract_string(value.get("model"))
+        .or_else(|| extract_string(value.get("model_name")))
+        .or_else(|| value.get("data").and_then(|data| extract_string(data.get("model"))))
+        .or_else(|| value.get("data").and_then(|data| extract_string(data.get("model_name"))))
+        .or_else(|| value.get("response").and_then(|data| extract_string(data.get("model"))))
+}
+
+fn extract_timestamp_from_value(value: &Value) -> Option<i64> {
+    value
+        .get("timestamp")
+        .or_else(|| value.get("time"))
+        .or_else(|| value.get("created_at"))
+        .or_else(|| value.get("data").and_then(|data| data.get("timestamp")))
+        .and_then(parse_timestamp_value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    fn create_test_file(content: &str) -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+        file.flush().unwrap();
+        file
+    }
+
+    #[test]
+    fn test_headless_usage_line() {
+        let content = r#"{"type":"turn.completed","model":"gpt-4o-mini","usage":{"input_tokens":120,"cached_input_tokens":20,"output_tokens":30}}"#;
+        let file = create_test_file(content);
+
+        let messages = parse_codex_file(file.path());
+
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].model_id, "gpt-4o-mini");
+        assert_eq!(messages[0].tokens.input, 100);
+        assert_eq!(messages[0].tokens.output, 30);
+        assert_eq!(messages[0].tokens.cache_read, 20);
+    }
+
+    #[test]
+    fn test_headless_usage_nested_data() {
+        let content = r#"{"type":"result","data":{"model_name":"gpt-4o","usage":{"input_tokens":50,"cached_input_tokens":5,"output_tokens":12}}}"#;
+        let file = create_test_file(content);
+
+        let messages = parse_codex_file(file.path());
+
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].model_id, "gpt-4o");
+        assert_eq!(messages[0].tokens.input, 45);
+        assert_eq!(messages[0].tokens.output, 12);
+        assert_eq!(messages[0].tokens.cache_read, 5);
+    }
 }
