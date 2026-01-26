@@ -21,9 +21,11 @@ pub(crate) fn parse_timestamp_value(value: &Value) -> Option<i64> {
         return parse_timestamp_str(ts);
     }
 
-    let numeric = value.as_i64().or_else(|| value.as_u64().map(|v| v as i64))?;
+    let numeric = value
+        .as_i64()
+        .or_else(|| value.as_u64().map(|v| v as i64))?;
     // Heuristic: values >= 1e12 are treated as milliseconds, smaller values as seconds.
-    if numeric > 1_000_000_000_000 {
+    if numeric >= 1_000_000_000_000 {
         Some(numeric)
     } else {
         Some(numeric * 1000)
@@ -36,7 +38,7 @@ pub(crate) fn parse_timestamp_str(value: &str) -> Option<i64> {
     }
 
     if let Ok(numeric) = value.parse::<i64>() {
-        if numeric > 1_000_000_000_000 {
+        if numeric >= 1_000_000_000_000 {
             return Some(numeric);
         }
         return Some(numeric * 1000);

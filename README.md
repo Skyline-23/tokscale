@@ -403,6 +403,55 @@ TOKSCALE_MAX_OUTPUT_BYTES=104857600 tokscale --json > report.json
 
 > **Note**: These limits are safety measures to prevent hangs and memory issues. Most users won't need to change them.
 
+### Headless Mode
+
+Tokscale can aggregate token usage from **headless/non-interactive CLI outputs** for automation, CI/CD pipelines, and batch processing.
+
+**What is headless mode?**
+
+When you run AI coding tools with JSON output flags (e.g., `codex exec --json`, `claude --output-format json`), they output usage data to stdout instead of storing it in their regular session directories. Headless mode allows you to capture and track this usage.
+
+**Storage location:** `~/.config/tokscale/headless/`
+
+Tokscale automatically scans this directory structure:
+```
+~/.config/tokscale/headless/
+├── claude/      # Claude Code JSON outputs
+├── codex/       # Codex CLI JSONL outputs
+└── gemini/      # Gemini CLI JSON/JSONL outputs
+```
+
+**Environment variable:** Set `TOKSCALE_HEADLESS_DIR` to customize the headless log directory:
+```bash
+export TOKSCALE_HEADLESS_DIR="$HOME/my-custom-logs"
+```
+
+**Usage examples:**
+
+| Tool | Command Example |
+|------|-----------------|
+| **Codex CLI** | `codex exec --json "implement feature" > ~/.config/tokscale/headless/codex/ci-run.jsonl` |
+| **Claude Code** | `claude --output-format json "fix bugs" > ~/.config/tokscale/headless/claude/automation.json` |
+| **Claude Code (streaming)** | `claude --output-format stream-json "task" > ~/.config/tokscale/headless/claude/stream.jsonl` |
+| **Gemini CLI** | *(if supported)* `gemini --json "analyze" > ~/.config/tokscale/headless/gemini/batch.json` |
+
+**CI/CD integration example:**
+
+```bash
+# In your GitHub Actions workflow
+- name: Run AI automation
+  run: |
+    mkdir -p ~/.config/tokscale/headless/claude
+    claude --output-format json "review code changes" \
+      > ~/.config/tokscale/headless/claude/pr-${{ github.event.pull_request.number }}.json
+
+# Later, track usage
+- name: Report token usage
+  run: tokscale --json
+```
+
+> **Note**: The tools do not automatically save JSON output to files. You must redirect stdout to the headless directory as shown above.
+
 ## Frontend Visualization
 
 The frontend provides a GitHub-style contribution graph visualization:

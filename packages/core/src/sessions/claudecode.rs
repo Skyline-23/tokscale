@@ -151,7 +151,9 @@ pub fn parse_claude_file(path: &Path) -> Vec<UnifiedMessage> {
         }
     }
 
-    if let Some(message) = finalize_headless_state(&mut headless_state, &session_id, fallback_timestamp) {
+    if let Some(message) =
+        finalize_headless_state(&mut headless_state, &session_id, fallback_timestamp)
+    {
         messages.push(message);
     }
 
@@ -230,7 +232,9 @@ fn process_claude_headless_line(
             completed_message = finalize_headless_state(state, session_id, fallback_timestamp);
         }
         _ => {
-            if let Some(message) = extract_claude_headless_message(&value, session_id, fallback_timestamp) {
+            if let Some(message) =
+                extract_claude_headless_message(&value, session_id, fallback_timestamp)
+            {
                 completed_message = Some(message);
             }
         }
@@ -268,8 +272,11 @@ fn extract_claude_headless_message(
 }
 
 fn extract_claude_model(value: &Value) -> Option<String> {
-    extract_string(value.get("model"))
-        .or_else(|| value.get("message").and_then(|msg| extract_string(msg.get("model"))))
+    extract_string(value.get("model")).or_else(|| {
+        value
+            .get("message")
+            .and_then(|msg| extract_string(msg.get("model")))
+    })
 }
 
 fn extract_claude_timestamp(value: &Value) -> Option<i64> {
@@ -303,6 +310,7 @@ fn finalize_headless_state(
     let model = state.model.clone()?;
     let timestamp = state.timestamp_ms.unwrap_or(fallback_timestamp);
     if state.input == 0 && state.output == 0 && state.cache_read == 0 && state.cache_write == 0 {
+        *state = ClaudeHeadlessState::default();
         return None;
     }
 
@@ -326,7 +334,6 @@ fn finalize_headless_state(
     Some(message)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -349,7 +356,11 @@ mod tests {
         let file = create_test_file(content);
         let messages = parse_claude_file(file.path());
 
-        assert_eq!(messages.len(), 2, "Should deduplicate to 2 messages (first duplicate skipped)");
+        assert_eq!(
+            messages.len(),
+            2,
+            "Should deduplicate to 2 messages (first duplicate skipped)"
+        );
         assert_eq!(messages[0].tokens.input, 100);
         assert_eq!(messages[1].tokens.input, 200);
     }
@@ -362,7 +373,11 @@ mod tests {
         let file = create_test_file(content);
         let messages = parse_claude_file(file.path());
 
-        assert_eq!(messages.len(), 2, "Different requestId should not be deduplicated");
+        assert_eq!(
+            messages.len(),
+            2,
+            "Different requestId should not be deduplicated"
+        );
     }
 
     #[test]
@@ -373,7 +388,11 @@ mod tests {
         let file = create_test_file(content);
         let messages = parse_claude_file(file.path());
 
-        assert_eq!(messages.len(), 2, "Entries without messageId/requestId should still be processed");
+        assert_eq!(
+            messages.len(),
+            2,
+            "Entries without messageId/requestId should still be processed"
+        );
     }
 
     #[test]
