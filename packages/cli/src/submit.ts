@@ -10,7 +10,7 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { loadCredentials, getApiBaseUrl, loadStarCache, saveStarCache } from "./credentials.js";
 import { parseLocalSourcesAsync, finalizeReportAndGraphAsync, type ParsedMessages } from "./native.js";
-import { syncCursorCache, loadCursorCredentials } from "./cursor.js";
+import { syncCursorCache, isCursorLoggedIn, hasCursorUsageCache } from "./cursor.js";
 import type { TokenContributionData } from "./graph-types.js";
 import { formatCurrency } from "./table.js";
 
@@ -221,16 +221,21 @@ export async function submit(options: SubmitOptions = {}): Promise<void> {
         until: options.until,
         year: options.year,
       }),
-      includeCursor && loadCursorCredentials()
+      includeCursor && isCursorLoggedIn()
         ? syncCursorCache()
-        : Promise.resolve({ synced: false, rows: 0 }),
+        : Promise.resolve({ synced: false, rows: 0, error: undefined }),
     ]);
+
+    if (includeCursor && cursorSync.error && (cursorSync.synced || hasCursorUsageCache())) {
+      const prefix = cursorSync.synced ? "Cursor sync warning" : "Cursor sync failed; using cached data";
+      console.log(pc.yellow(`  ${prefix}: ${cursorSync.error}`));
+    }
 
     // Phase 2: Finalize with pricing (combines local + cursor)
     // Single subprocess call ensures consistent pricing for both report and graph
     const { report, graph } = await finalizeReportAndGraphAsync({
       localMessages,
-      includeCursor: includeCursor && cursorSync.synced,
+      includeCursor: includeCursor && (cursorSync.synced || hasCursorUsageCache()),
       since: options.since,
       until: options.until,
       year: options.year,

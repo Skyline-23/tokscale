@@ -9,7 +9,7 @@ import {
   finalizeReportAndGraphAsync,
   type ParsedMessages,
 } from "./native.js";
-import { syncCursorCache, loadCursorCredentials } from "./cursor.js";
+import { syncCursorCache, isCursorLoggedIn, hasCursorUsageCache } from "./cursor.js";
 import { loadCredentials } from "./credentials.js";
 import type { SourceType } from "./graph-types.js";
 
@@ -218,7 +218,7 @@ async function loadWrappedData(options: WrappedOptions): Promise<WrappedData> {
   const until = `${year}-12-31`;
 
   const phase1Results = await Promise.allSettled([
-    includeCursor && loadCursorCredentials() ? syncCursorCache() : Promise.resolve({ synced: false, rows: 0 }),
+    includeCursor && isCursorLoggedIn() ? syncCursorCache() : Promise.resolve({ synced: false, rows: 0, error: undefined }),
     localSources.length > 0
       ? parseLocalSourcesAsync({ sources: localSources, since, until, year })
       : Promise.resolve({ messages: [], opencodeCount: 0, claudeCount: 0, codexCount: 0, geminiCount: 0, ampCount: 0, droidCount: 0, processingTimeMs: 0 } as ParsedMessages),
@@ -226,10 +226,15 @@ async function loadWrappedData(options: WrappedOptions): Promise<WrappedData> {
 
   const cursorSync = phase1Results[0].status === "fulfilled" 
     ? phase1Results[0].value 
-    : { synced: false, rows: 0 };
+    : { synced: false, rows: 0, error: "Cursor sync failed" };
   const localMessages = phase1Results[1].status === "fulfilled" 
     ? phase1Results[1].value 
     : null;
+
+  if (includeCursor && cursorSync.error && (cursorSync.synced || hasCursorUsageCache())) {
+    const prefix = cursorSync.synced ? "Cursor sync warning" : "Cursor sync failed; using cached data";
+    console.log(pc.yellow(`  ${prefix}: ${cursorSync.error}`));
+  }
 
   const emptyMessages: ParsedMessages = {
     messages: [],
@@ -244,7 +249,7 @@ async function loadWrappedData(options: WrappedOptions): Promise<WrappedData> {
 
   const { report, graph } = await finalizeReportAndGraphAsync({
     localMessages: localMessages || emptyMessages,
-    includeCursor: includeCursor && cursorSync.synced,
+    includeCursor: includeCursor && (cursorSync.synced || hasCursorUsageCache()),
     since,
     until,
     year,
