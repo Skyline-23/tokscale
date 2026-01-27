@@ -182,6 +182,7 @@ pub struct GraphResult {
 
 use rayon::prelude::*;
 use sessions::UnifiedMessage;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 fn get_home_dir(home_dir_option: &Option<String>) -> napi::Result<String> {
@@ -692,6 +693,16 @@ fn filter_messages_for_report(
     filtered
 }
 
+fn is_headless_path(path: &Path, headless_roots: &[PathBuf]) -> bool {
+    headless_roots.iter().any(|root| path.starts_with(root))
+}
+
+fn apply_headless_agent(message: &mut UnifiedMessage, is_headless: bool) {
+    if is_headless && message.agent.is_none() {
+        message.agent = Some("headless".to_string());
+    }
+}
+
 // =============================================================================
 // Two-Phase Processing Functions (for parallel execution optimization)
 // =============================================================================
@@ -720,6 +731,7 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
     let local_sources: Vec<String> = sources.into_iter().filter(|s| s != "cursor").collect();
 
     let scan_result = scanner::scan_all_sources(&home_dir, &local_sources);
+    let headless_roots = scanner::headless_roots(&home_dir);
 
     let mut messages: Vec<ParsedMessage> = Vec::new();
 
@@ -728,7 +740,9 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
         .opencode_files
         .par_iter()
         .filter_map(|path| {
-            let msg = sessions::opencode::parse_opencode_file(path)?;
+            let mut msg = sessions::opencode::parse_opencode_file(path)?;
+            let is_headless = is_headless_path(path, &headless_roots);
+            apply_headless_agent(&mut msg, is_headless);
             Some(unified_to_parsed(&msg))
         })
         .collect();
@@ -740,9 +754,11 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
         .claude_files
         .par_iter()
         .flat_map(|path| {
+            let is_headless = is_headless_path(path, &headless_roots);
             sessions::claudecode::parse_claude_file(path)
                 .into_iter()
-                .map(|msg| {
+                .map(|mut msg| {
+                    apply_headless_agent(&mut msg, is_headless);
                     let dedup_key = msg.dedup_key.clone().unwrap_or_default();
                     (dedup_key, unified_to_parsed(&msg))
                 })
@@ -765,9 +781,13 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
         .codex_files
         .par_iter()
         .flat_map(|path| {
+            let is_headless = is_headless_path(path, &headless_roots);
             sessions::codex::parse_codex_file(path)
                 .into_iter()
-                .map(|msg| unified_to_parsed(&msg))
+                .map(|mut msg| {
+                    apply_headless_agent(&mut msg, is_headless);
+                    unified_to_parsed(&msg)
+                })
                 .collect::<Vec<_>>()
         })
         .collect();
@@ -779,9 +799,13 @@ pub fn parse_local_sources(options: LocalParseOptions) -> napi::Result<ParsedMes
         .gemini_files
         .par_iter()
         .flat_map(|path| {
+            let is_headless = is_headless_path(path, &headless_roots);
             sessions::gemini::parse_gemini_file(path)
                 .into_iter()
-                .map(|msg| unified_to_parsed(&msg))
+                .map(|mut msg| {
+                    apply_headless_agent(&mut msg, is_headless);
+                    unified_to_parsed(&msg)
+                })
                 .collect::<Vec<_>>()
         })
         .collect();
