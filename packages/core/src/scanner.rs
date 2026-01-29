@@ -87,9 +87,7 @@ pub fn headless_roots(home_dir: &str) -> Vec<PathBuf> {
         "{}/Library/Application Support/tokscale/headless",
         home_dir
     ));
-    if !roots.contains(&mac_root) {
-        roots.push(mac_root);
-    }
+    roots.push(mac_root);
 
     roots
 }
